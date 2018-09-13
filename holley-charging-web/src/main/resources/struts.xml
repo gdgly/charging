@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC  
+    "-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"  
+    "http://struts.apache.org/dtds/struts-2.3.dtd">
+<struts>
+	<package name="struts-base" namespace="/" extends="struts-default">
+		<interceptors>
+			<interceptor name="actionInterceptor"
+				class="com.holley.charging.intercepter.ActionInterceptor">
+			</interceptor>
+			<interceptor name="sessionInterceptor"
+				class="com.holley.charging.intercepter.SessionInterceptor">
+			</interceptor>
+			<interceptor name="permissionInterceptor"
+				class="com.holley.charging.intercepter.PermissionInterceptor">
+			</interceptor>
+			<interceptor name="userPermissionInterceptor"
+				class="com.holley.charging.intercepter.UserPermissionInterceptor">
+			</interceptor>
+			<interceptor name="checkRuleInterceptor"
+				class="com.holley.charging.intercepter.CheckRuleInterceptor">
+			</interceptor>
+			<interceptor name="userCheckRuleInterceptor"
+				class="com.holley.charging.intercepter.UserCheckRuleInterceptor">
+			</interceptor>
+			<interceptor name="userSessionInterceptor"
+				class="com.holley.charging.intercepter.UserSessionInterceptor">
+			</interceptor>
+			<interceptor-stack name="mydefault">
+				<interceptor-ref name="defaultStack" />
+				<interceptor-ref name="actionInterceptor" />
+			</interceptor-stack>
+			<interceptor-stack name="sessiondefault">
+				<interceptor-ref name="defaultStack" />
+				<interceptor-ref name="actionInterceptor" />
+				<interceptor-ref name="sessionInterceptor" />
+				<interceptor-ref name="permissionInterceptor" />
+			</interceptor-stack>
+			<interceptor-stack name="userSessiondefault">
+				<interceptor-ref name="defaultStack" />
+				<interceptor-ref name="actionInterceptor" />
+				<interceptor-ref name="userSessionInterceptor" />
+				<interceptor-ref name="userPermissionInterceptor" />
+			</interceptor-stack>
+			<interceptor-stack name="userAddCheckRuleStack">
+				<interceptor-ref name="defaultStack" />
+				<interceptor-ref name="actionInterceptor" />
+				<interceptor-ref name="userSessionInterceptor" />
+				<interceptor-ref name="userPermissionInterceptor" />
+				<interceptor-ref name="userCheckRuleInterceptor" />
+			</interceptor-stack>
+			
+			<interceptor-stack name="addCheckRuleStack">
+				<interceptor-ref name="defaultStack" />
+				<interceptor-ref name="actionInterceptor" />
+				<interceptor-ref name="sessionInterceptor" />
+				<interceptor-ref name="permissionInterceptor" />
+				<interceptor-ref name="checkRuleInterceptor" />
+			</interceptor-stack>
+		</interceptors>
+		<default-interceptor-ref name="mydefault" />
+
+		<global-results>
+			<result name="login" type="redirectAction">
+				<param name="namespace">/user</param>
+				<param name="actionName">userlogin_init</param>
+			</result>
+			<result name="logout" type="chain">userlogin_init</result>
+			<result name="msg">/jsp/bussiness/msg.jsp</result>
+			<result name="userMsg">/jsp/user/userMsg.jsp</result>
+		</global-results>
+	</package>
+	
+	<package name="json-base" namespace="/" extends="json-default">
+		<interceptors>
+			<interceptor name="jsonActionInterceptor"
+				class="com.holley.charging.intercepter.JsonActionInterceptor">
+			</interceptor>
+			<interceptor name="jsonSessionInterceptor"
+				class="com.holley.charging.intercepter.JsonSessionInterceptor">
+			</interceptor>
+			<interceptor-stack name="jsonDefault">
+				<interceptor-ref name="defaultStack"/>
+				<interceptor-ref name="json"/>
+				<interceptor-ref name="jsonActionInterceptor"/>
+				<interceptor-ref name="jsonSessionInterceptor"/>
+			</interceptor-stack>
+			<interceptor-stack name="jsonNoSessionDefault">
+				<interceptor-ref name="defaultStack"/>
+				<interceptor-ref name="json"/>
+				<interceptor-ref name="jsonActionInterceptor"/>
+			</interceptor-stack>
+		</interceptors>
+		<!-- 默认拦截器栈配置 -->
+		<default-interceptor-ref name="jsonDefault"/>
+		<global-results>
+			 <result name="userLoginStatus" type="json"></result>  
+		</global-results>
+	</package>
+	<include file="struts/struts-web.xml" />
+	<include file="struts/struts-bussiness.xml" />
+	<include file="struts/struts-user.xml" />
+</struts>

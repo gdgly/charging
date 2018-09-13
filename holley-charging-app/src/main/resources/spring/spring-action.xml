@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:flex="http://www.springframework.org/schema/flex"
+	xsi:schemaLocation="       
+      http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd       
+      http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd       
+      http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-4.0.xsd       
+      http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd       
+      http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+      http://www.springframework.org/schema/flex
+      http://www.springframework.org/schema/flex/spring-flex-1.0.xsd"
+	default-autowire="byName">		
+	
+		
+	<bean id="imageCodeAction" class="com.holley.charging.app.sys.action.ImageCodeAction" scope="prototype"/>
+	
+	<bean id="sysLinkAction" class="com.holley.charging.app.sys.action.SysLinkAction" scope="prototype"/>
+
+	<bean id="versionAction" class="com.holley.charging.app.sys.action.VersionAction" scope="prototype"/>
+	
+	<bean id="appointmentAction" class="com.holley.charging.app.bus.action.AppointmentAction" scope="prototype"/>
+	
+	<bean id="chargingAction" class="com.holley.charging.app.bus.action.ChargingAction" scope="prototype"/>
+	
+	<bean id="paymentAction" class="com.holley.charging.app.bus.action.PaymentAction" scope="prototype"/>
+	
+	<bean id="pobObjectAction" class="com.holley.charging.app.pob.action.PobObjectAction" scope="prototype"/>
+	
+	<bean id="userInfoAction" class="com.holley.charging.app.user.action.UserInfoAction" scope="prototype"/>
+	
+	<bean id="userLoginAction" class="com.holley.charging.app.user.action.UserLoginAction" scope="prototype"/>
+	
+	<bean id="userRegisterAction" class="com.holley.charging.app.user.action.UserRegisterAction" scope="prototype"/>
+		
+</beans>

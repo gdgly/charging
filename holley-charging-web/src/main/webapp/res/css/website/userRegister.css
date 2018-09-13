@@ -1,0 +1,71 @@
+.register-page{
+	background-color: #fdfdfe;
+	padding-bottom: 10px;
+}
+
+.register-page ul li{
+	width: 50%;
+	text-align: center;
+}
+
+.register-page >.nav-tabs > li.active > a, .register-page > .nav-tabs > li.active > a:hover,.register-page > .nav-tabs > li.active > a:focus,.register-page > .nav-tabs > li：hover {
+	color: #f49447;
+	cursor: default;
+	background-color: #fdfdfe;
+	border: 0px solid #ddd;
+	border-bottom-color: transparent;
+	border-bottom: 2px solid #fdfdfe;
+}
+
+.register-page >.nav-tabs > li>a{
+	color: #676767;
+	background-color: #cccccc;
+	margin-left: 0;
+	margin-right: 0;
+	border-radius: 0;
+	font-size: 18px;
+	
+}
+
+.regist-content .form-horizontal .form-group{
+	margin-bottom: 15px;
+}
+
+.regist-content .form-horizontal .form-group label{
+	color: #676767;
+}
+
+.regist-content .form-horizontal .form-group .form-control{
+	display:inline-block;
+	width:50%;
+}
+.regist-content .form-horizontal .form-group div span{
+	color :red
+}
+.regist-content .form-horizontal .form-group div .refresh{
+	color :blue;
+}
+
+.btn-phonecode{
+	color: #676767;
+    background-color: #fff;
+    padding-right: 0;
+}
+
+.btn-gray{
+	color:#fff;
+    background-color: #ccc;
+    border-style: none;
+    width: 120px;
+}
+
+.btn-blue{
+	color:#fff;
+    background-color: #0a95f2;
+    border-style: none;
+    width: 120px;
+}
+
+.regist-content .form-horizontal .form-group .form-control{
+	width:214px;
+}

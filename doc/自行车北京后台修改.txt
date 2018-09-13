@@ -1,0 +1,16 @@
+1.pob_charging_pile增加PILE_TO_TYPE字段
+2.pob_charging_station增加STATION_TO_TYPE字段
+3.增加先付费表bus_bike_payment
+4.实时监控模块取消02010000设置SYSTEMID=0
+5.增加电动自行车地图图标
+6.增加权限控制模块
+7.增加bus_rebate优惠规则表
+8.增加bus_user_rebate用户优惠对照表
+9.增加数据库距离计算函数calcDistance
+10.增加用户微信ID记录表bus_user_wechat
+
+11.增加05070000 优惠方案 sys/initRebateList.action
+12.增加优惠方案库表bus_rebate
+13.增加用户优惠方案库表bus_user_rebate
+
+14.计费模型精确到小数点后4位表：bus_charge_rule，bus_pile_chargerule，pob_charging_pile

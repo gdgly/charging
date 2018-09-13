@@ -1,0 +1,1251 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.holley.charging.dao.bus.BusPaymentMapper" >
+  <resultMap id="BaseResultMap" type="com.holley.charging.model.bus.BusPayment" >
+    <id column="ID" property="id" jdbcType="INTEGER" />
+    <result column="USER_ID" property="userId" jdbcType="INTEGER" />
+    <result column="PILE_ID" property="pileId" jdbcType="INTEGER" />
+    <result column="TRADE_NO" property="tradeNo" jdbcType="VARCHAR" />
+    <result column="CHA_MODE" property="chaMode" jdbcType="SMALLINT" />
+    <result column="DEAL_STATUS" property="dealStatus" jdbcType="SMALLINT" />
+    <result column="PARK_FEE" property="parkFee" jdbcType="DECIMAL" />
+    <result column="CHA_FEE" property="chaFee" jdbcType="DECIMAL" />
+    <result column="SERVICE_FEE" property="serviceFee" jdbcType="DECIMAL" />
+    <result column="START_TIME" property="startTime" jdbcType="TIMESTAMP" />
+    <result column="END_TIME" property="endTime" jdbcType="TIMESTAMP" />
+    <result column="CHA_LEN" property="chaLen" jdbcType="INTEGER" />
+    <result column="CHA_POWER" property="chaPower" jdbcType="DOUBLE" />
+    <result column="SHOULD_MONEY" property="shouldMoney" jdbcType="DECIMAL" />
+    <result column="ACTUAL_MONEY" property="actualMoney" jdbcType="DECIMAL" />
+    <result column="PAY_WAY" property="payWay" jdbcType="SMALLINT" />
+    <result column="ACCOUNT_INFO" property="accountInfo" jdbcType="VARCHAR" />
+    <result column="PAY_STATUS" property="payStatus" jdbcType="SMALLINT" />
+    <result column="IS_BILL" property="isBill" jdbcType="SMALLINT" />
+    <result column="UPDATE_TIME" property="updateTime" jdbcType="TIMESTAMP" />
+  </resultMap>
+  <resultMap id="DealFinishResultMap"  type="com.holley.charging.model.bus.BusPayment" extends="BaseResultMap">
+  	 <result column="commentid" property="commentid" jdbcType="INTEGER" />
+  </resultMap>
+   <resultMap id="ProfitModelMap" type="com.holley.charging.model.def.ProfitModel" >
+  	<result column="pileName" property="pileName" jdbcType="VARCHAR" />
+  	<result column="dateName" property="dateName" jdbcType="VARCHAR" />
+	<result column="appMoney" property="appMoney" jdbcType="DECIMAL" />
+	<result column="serviceMoney" property="serviceMoney" jdbcType="DECIMAL" />
+	<result column="parkMoney" property="parkMoney" jdbcType="DECIMAL" />
+	<result column="chaMoney" property="chaMoney" jdbcType="DECIMAL" />
+	<result column="totalMoney" property="totalMoney" jdbcType="DECIMAL" />
+  </resultMap>
+  <resultMap id="StationChargeModelMap" type="com.holley.charging.model.def.StationChargeModel" >
+  	<result column="stationId" property="stationId" jdbcType="INTEGER" />
+  	<result column="stationName" property="stationName" jdbcType="VARCHAR" />
+  	<result column="address" property="address" jdbcType="VARCHAR" />
+  	<result column="pileNum" property="pileNum" jdbcType="INTEGER" />
+   	<result column="chaNum" property="chaNum" jdbcType="INTEGER" />
+    <result column="serviceFee" property="serviceFee" jdbcType="DECIMAL" />
+    <result column="parkFee" property="parkFee" jdbcType="DECIMAL" />
+    <result column="chaFee" property="chaFee" jdbcType="DECIMAL" />
+    <result column="score" property="score" jdbcType="SMALLINT" />
+  </resultMap>
+  
+  <resultMap id="ChargeModelMap" type="com.holley.charging.model.def.ChargeModel" extends="BaseResultMap">
+    <result column="pileName" property="pileName" jdbcType="VARCHAR" />
+    <result column="pileType" property="pileType" jdbcType="SMALLINT" />
+    <result column="username" property="username" jdbcType="VARCHAR" />
+    <result column="phone" property="phone" jdbcType="VARCHAR" />
+    <result column="stationName" property="stationName" jdbcType="VARCHAR" />
+    <result column="address" property="address" jdbcType="VARCHAR" />
+    <result column="totalChaFeeOut" property="totalChaFeeOut" jdbcType="DECIMAL" />
+    <result column="totalServiceFeeOut" property="totalServiceFeeOut" jdbcType="DECIMAL" />
+    <result column="totalParkFeeOut" property="totalParkFeeOut" jdbcType="DECIMAL" />
+    <result column="payNo" property="payNo" jdbcType="VARCHAR" />
+    <result column="realName" property="realName" jdbcType="VARCHAR" />
+    <result column="plateNum" property="plateNum" jdbcType="VARCHAR" />
+  </resultMap>
+  <sql id="Example_Where_Clause" >
+    <where >
+      <foreach collection="oredCriteria" item="criteria" separator="or" >
+        <if test="criteria.valid" >
+          <trim prefix="(" suffix=")" prefixOverrides="and" >
+            <foreach collection="criteria.criteria" item="criterion" >
+              <choose >
+                <when test="criterion.noValue" >
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue" >
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue" >
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue" >
+                  and ${criterion.condition}
+                  <foreach collection="criterion.value" item="listItem" open="(" close=")" separator="," >
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause" >
+    <where >
+      <foreach collection="example.oredCriteria" item="criteria" separator="or" >
+        <if test="criteria.valid" >
+          <trim prefix="(" suffix=")" prefixOverrides="and" >
+            <foreach collection="criteria.criteria" item="criterion" >
+              <choose >
+                <when test="criterion.noValue" >
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue" >
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue" >
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue" >
+                  and ${criterion.condition}
+                  <foreach collection="criterion.value" item="listItem" open="(" close=")" separator="," >
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Base_Column_List" >
+    ID, USER_ID, PILE_ID, TRADE_NO, CHA_MODE, DEAL_STATUS, PARK_FEE, CHA_FEE, SERVICE_FEE, 
+    START_TIME, END_TIME, CHA_LEN, CHA_POWER, SHOULD_MONEY, ACTUAL_MONEY, PAY_WAY, ACCOUNT_INFO, 
+    PAY_STATUS, IS_BILL, UPDATE_TIME
+  </sql>
+  <select id="selectByExample" resultMap="BaseResultMap" parameterType="com.holley.charging.model.bus.BusPaymentExample" >
+    select
+    <if test="distinct" >
+      distinct
+    </if>
+    <include refid="Base_Column_List" />
+    from bus_payment
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null" >
+      order by ${orderByClause}
+    </if>
+  </select>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from bus_payment
+    where ID = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from bus_payment
+    where ID = #{id,jdbcType=INTEGER}
+  </delete>
+  <delete id="deleteByExample" parameterType="com.holley.charging.model.bus.BusPaymentExample" >
+    delete from bus_payment
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+  </delete>
+  <insert id="insert" parameterType="com.holley.charging.model.bus.BusPayment" >
+    insert into bus_payment (ID, USER_ID, PILE_ID, 
+      TRADE_NO, CHA_MODE, DEAL_STATUS, 
+      PARK_FEE, CHA_FEE, SERVICE_FEE, 
+      START_TIME, END_TIME, CHA_LEN, 
+      CHA_POWER, SHOULD_MONEY, ACTUAL_MONEY, 
+      PAY_WAY, ACCOUNT_INFO, PAY_STATUS, 
+      IS_BILL, UPDATE_TIME)
+    values (#{id,jdbcType=INTEGER}, #{userId,jdbcType=INTEGER}, #{pileId,jdbcType=INTEGER}, 
+      #{tradeNo,jdbcType=VARCHAR}, #{chaMode,jdbcType=SMALLINT}, #{dealStatus,jdbcType=SMALLINT}, 
+      #{parkFee,jdbcType=DECIMAL}, #{chaFee,jdbcType=DECIMAL}, #{serviceFee,jdbcType=DECIMAL}, 
+      #{startTime,jdbcType=TIMESTAMP}, #{endTime,jdbcType=TIMESTAMP}, #{chaLen,jdbcType=INTEGER}, 
+      #{chaPower,jdbcType=DOUBLE}, #{shouldMoney,jdbcType=DECIMAL}, #{actualMoney,jdbcType=DECIMAL}, 
+      #{payWay,jdbcType=SMALLINT}, #{accountInfo,jdbcType=VARCHAR}, #{payStatus,jdbcType=SMALLINT}, 
+      #{isBill,jdbcType=SMALLINT}, #{updateTime,jdbcType=TIMESTAMP})
+  </insert>
+  <insert id="insertSelective" parameterType="com.holley.charging.model.bus.BusPayment" >
+    insert into bus_payment
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        ID,
+      </if>
+      <if test="userId != null" >
+        USER_ID,
+      </if>
+      <if test="pileId != null" >
+        PILE_ID,
+      </if>
+      <if test="tradeNo != null" >
+        TRADE_NO,
+      </if>
+      <if test="chaMode != null" >
+        CHA_MODE,
+      </if>
+      <if test="dealStatus != null" >
+        DEAL_STATUS,
+      </if>
+      <if test="parkFee != null" >
+        PARK_FEE,
+      </if>
+      <if test="chaFee != null" >
+        CHA_FEE,
+      </if>
+      <if test="serviceFee != null" >
+        SERVICE_FEE,
+      </if>
+      <if test="startTime != null" >
+        START_TIME,
+      </if>
+      <if test="endTime != null" >
+        END_TIME,
+      </if>
+      <if test="chaLen != null" >
+        CHA_LEN,
+      </if>
+      <if test="chaPower != null" >
+        CHA_POWER,
+      </if>
+      <if test="shouldMoney != null" >
+        SHOULD_MONEY,
+      </if>
+      <if test="actualMoney != null" >
+        ACTUAL_MONEY,
+      </if>
+      <if test="payWay != null" >
+        PAY_WAY,
+      </if>
+      <if test="accountInfo != null" >
+        ACCOUNT_INFO,
+      </if>
+      <if test="payStatus != null" >
+        PAY_STATUS,
+      </if>
+      <if test="isBill != null" >
+        IS_BILL,
+      </if>
+      <if test="updateTime != null" >
+        UPDATE_TIME,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="userId != null" >
+        #{userId,jdbcType=INTEGER},
+      </if>
+      <if test="pileId != null" >
+        #{pileId,jdbcType=INTEGER},
+      </if>
+      <if test="tradeNo != null" >
+        #{tradeNo,jdbcType=VARCHAR},
+      </if>
+      <if test="chaMode != null" >
+        #{chaMode,jdbcType=SMALLINT},
+      </if>
+      <if test="dealStatus != null" >
+        #{dealStatus,jdbcType=SMALLINT},
+      </if>
+      <if test="parkFee != null" >
+        #{parkFee,jdbcType=DECIMAL},
+      </if>
+      <if test="chaFee != null" >
+        #{chaFee,jdbcType=DECIMAL},
+      </if>
+      <if test="serviceFee != null" >
+        #{serviceFee,jdbcType=DECIMAL},
+      </if>
+      <if test="startTime != null" >
+        #{startTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="endTime != null" >
+        #{endTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="chaLen != null" >
+        #{chaLen,jdbcType=INTEGER},
+      </if>
+      <if test="chaPower != null" >
+        #{chaPower,jdbcType=DOUBLE},
+      </if>
+      <if test="shouldMoney != null" >
+        #{shouldMoney,jdbcType=DECIMAL},
+      </if>
+      <if test="actualMoney != null" >
+        #{actualMoney,jdbcType=DECIMAL},
+      </if>
+      <if test="payWay != null" >
+        #{payWay,jdbcType=SMALLINT},
+      </if>
+      <if test="accountInfo != null" >
+        #{accountInfo,jdbcType=VARCHAR},
+      </if>
+      <if test="payStatus != null" >
+        #{payStatus,jdbcType=SMALLINT},
+      </if>
+      <if test="isBill != null" >
+        #{isBill,jdbcType=SMALLINT},
+      </if>
+      <if test="updateTime != null" >
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <select id="countByExample" parameterType="com.holley.charging.model.bus.BusPaymentExample" resultType="java.lang.Integer" >
+    select count(*) from bus_payment
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+  </select>
+  <update id="updateByExampleSelective" parameterType="map" >
+    update bus_payment
+    <set >
+      <if test="record.id != null" >
+        ID = #{record.id,jdbcType=INTEGER},
+      </if>
+      <if test="record.userId != null" >
+        USER_ID = #{record.userId,jdbcType=INTEGER},
+      </if>
+      <if test="record.pileId != null" >
+        PILE_ID = #{record.pileId,jdbcType=INTEGER},
+      </if>
+      <if test="record.tradeNo != null" >
+        TRADE_NO = #{record.tradeNo,jdbcType=VARCHAR},
+      </if>
+      <if test="record.chaMode != null" >
+        CHA_MODE = #{record.chaMode,jdbcType=SMALLINT},
+      </if>
+      <if test="record.dealStatus != null" >
+        DEAL_STATUS = #{record.dealStatus,jdbcType=SMALLINT},
+      </if>
+      <if test="record.parkFee != null" >
+        PARK_FEE = #{record.parkFee,jdbcType=DECIMAL},
+      </if>
+      <if test="record.chaFee != null" >
+        CHA_FEE = #{record.chaFee,jdbcType=DECIMAL},
+      </if>
+      <if test="record.serviceFee != null" >
+        SERVICE_FEE = #{record.serviceFee,jdbcType=DECIMAL},
+      </if>
+      <if test="record.startTime != null" >
+        START_TIME = #{record.startTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="record.endTime != null" >
+        END_TIME = #{record.endTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="record.chaLen != null" >
+        CHA_LEN = #{record.chaLen,jdbcType=INTEGER},
+      </if>
+      <if test="record.chaPower != null" >
+        CHA_POWER = #{record.chaPower,jdbcType=DOUBLE},
+      </if>
+      <if test="record.shouldMoney != null" >
+        SHOULD_MONEY = #{record.shouldMoney,jdbcType=DECIMAL},
+      </if>
+      <if test="record.actualMoney != null" >
+        ACTUAL_MONEY = #{record.actualMoney,jdbcType=DECIMAL},
+      </if>
+      <if test="record.payWay != null" >
+        PAY_WAY = #{record.payWay,jdbcType=SMALLINT},
+      </if>
+      <if test="record.accountInfo != null" >
+        ACCOUNT_INFO = #{record.accountInfo,jdbcType=VARCHAR},
+      </if>
+      <if test="record.payStatus != null" >
+        PAY_STATUS = #{record.payStatus,jdbcType=SMALLINT},
+      </if>
+      <if test="record.isBill != null" >
+        IS_BILL = #{record.isBill,jdbcType=SMALLINT},
+      </if>
+      <if test="record.updateTime != null" >
+        UPDATE_TIME = #{record.updateTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    <if test="_parameter != null" >
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByExample" parameterType="map" >
+    update bus_payment
+    set ID = #{record.id,jdbcType=INTEGER},
+      USER_ID = #{record.userId,jdbcType=INTEGER},
+      PILE_ID = #{record.pileId,jdbcType=INTEGER},
+      TRADE_NO = #{record.tradeNo,jdbcType=VARCHAR},
+      CHA_MODE = #{record.chaMode,jdbcType=SMALLINT},
+      DEAL_STATUS = #{record.dealStatus,jdbcType=SMALLINT},
+      PARK_FEE = #{record.parkFee,jdbcType=DECIMAL},
+      CHA_FEE = #{record.chaFee,jdbcType=DECIMAL},
+      SERVICE_FEE = #{record.serviceFee,jdbcType=DECIMAL},
+      START_TIME = #{record.startTime,jdbcType=TIMESTAMP},
+      END_TIME = #{record.endTime,jdbcType=TIMESTAMP},
+      CHA_LEN = #{record.chaLen,jdbcType=INTEGER},
+      CHA_POWER = #{record.chaPower,jdbcType=DOUBLE},
+      SHOULD_MONEY = #{record.shouldMoney,jdbcType=DECIMAL},
+      ACTUAL_MONEY = #{record.actualMoney,jdbcType=DECIMAL},
+      PAY_WAY = #{record.payWay,jdbcType=SMALLINT},
+      ACCOUNT_INFO = #{record.accountInfo,jdbcType=VARCHAR},
+      PAY_STATUS = #{record.payStatus,jdbcType=SMALLINT},
+      IS_BILL = #{record.isBill,jdbcType=SMALLINT},
+      UPDATE_TIME = #{record.updateTime,jdbcType=TIMESTAMP}
+    <if test="_parameter != null" >
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.holley.charging.model.bus.BusPayment" >
+    update bus_payment
+    <set >
+      <if test="userId != null" >
+        USER_ID = #{userId,jdbcType=INTEGER},
+      </if>
+      <if test="pileId != null" >
+        PILE_ID = #{pileId,jdbcType=INTEGER},
+      </if>
+      <if test="tradeNo != null" >
+        TRADE_NO = #{tradeNo,jdbcType=VARCHAR},
+      </if>
+      <if test="chaMode != null" >
+        CHA_MODE = #{chaMode,jdbcType=SMALLINT},
+      </if>
+      <if test="dealStatus != null" >
+        DEAL_STATUS = #{dealStatus,jdbcType=SMALLINT},
+      </if>
+      <if test="parkFee != null" >
+        PARK_FEE = #{parkFee,jdbcType=DECIMAL},
+      </if>
+      <if test="chaFee != null" >
+        CHA_FEE = #{chaFee,jdbcType=DECIMAL},
+      </if>
+      <if test="serviceFee != null" >
+        SERVICE_FEE = #{serviceFee,jdbcType=DECIMAL},
+      </if>
+      <if test="startTime != null" >
+        START_TIME = #{startTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="endTime != null" >
+        END_TIME = #{endTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="chaLen != null" >
+        CHA_LEN = #{chaLen,jdbcType=INTEGER},
+      </if>
+      <if test="chaPower != null" >
+        CHA_POWER = #{chaPower,jdbcType=DOUBLE},
+      </if>
+      <if test="shouldMoney != null" >
+        SHOULD_MONEY = #{shouldMoney,jdbcType=DECIMAL},
+      </if>
+      <if test="actualMoney != null" >
+        ACTUAL_MONEY = #{actualMoney,jdbcType=DECIMAL},
+      </if>
+      <if test="payWay != null" >
+        PAY_WAY = #{payWay,jdbcType=SMALLINT},
+      </if>
+      <if test="accountInfo != null" >
+        ACCOUNT_INFO = #{accountInfo,jdbcType=VARCHAR},
+      </if>
+      <if test="payStatus != null" >
+        PAY_STATUS = #{payStatus,jdbcType=SMALLINT},
+      </if>
+      <if test="isBill != null" >
+        IS_BILL = #{isBill,jdbcType=SMALLINT},
+      </if>
+      <if test="updateTime != null" >
+        UPDATE_TIME = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.holley.charging.model.bus.BusPayment" >
+    update bus_payment
+    set USER_ID = #{userId,jdbcType=INTEGER},
+      PILE_ID = #{pileId,jdbcType=INTEGER},
+      TRADE_NO = #{tradeNo,jdbcType=VARCHAR},
+      CHA_MODE = #{chaMode,jdbcType=SMALLINT},
+      DEAL_STATUS = #{dealStatus,jdbcType=SMALLINT},
+      PARK_FEE = #{parkFee,jdbcType=DECIMAL},
+      CHA_FEE = #{chaFee,jdbcType=DECIMAL},
+      SERVICE_FEE = #{serviceFee,jdbcType=DECIMAL},
+      START_TIME = #{startTime,jdbcType=TIMESTAMP},
+      END_TIME = #{endTime,jdbcType=TIMESTAMP},
+      CHA_LEN = #{chaLen,jdbcType=INTEGER},
+      CHA_POWER = #{chaPower,jdbcType=DOUBLE},
+      SHOULD_MONEY = #{shouldMoney,jdbcType=DECIMAL},
+      ACTUAL_MONEY = #{actualMoney,jdbcType=DECIMAL},
+      PAY_WAY = #{payWay,jdbcType=SMALLINT},
+      ACCOUNT_INFO = #{accountInfo,jdbcType=VARCHAR},
+      PAY_STATUS = #{payStatus,jdbcType=SMALLINT},
+      IS_BILL = #{isBill,jdbcType=SMALLINT},
+      UPDATE_TIME = #{updateTime,jdbcType=TIMESTAMP}
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+  <!-- 按年，月，季度统计服务费，停车费，充电费费用 -->
+  <select id="createYMQProfit" resultMap="ProfitModelMap" parameterType="java.util.Map">
+  	select 
+  	sum(truncate(pay.SERVICE_FEE*#{rate},2)) as serviceMoney,
+  	sum(truncate(pay.PARK_FEE*#{rate},2)) as parkMoney,
+  	sum(truncate(pay.CHA_FEE*#{rate},2)) as chaMoney,
+	<if test="profitType == 1" >
+        year(pay.UPDATE_TIME) as dateName 
+    </if>
+  	<if test="profitType == 2" >
+        month(pay.UPDATE_TIME) as dateName 
+    </if>
+    <if test="profitType == 3" >
+        quarter(pay.UPDATE_TIME) as dateName 
+    </if>
+	from bus_payment pay 
+	left join 
+	pob_charging_pile pile on pay.PILE_ID=pile.ID 
+	left join
+	pob_charging_station station on station.id=pile.STATION_ID
+	where 1=1
+	<if test="busType != null" >
+		and station.BUS_TYPE =#{busType,jdbcType=SMALLINT} 
+	</if>
+	<if test="busMec != null" >
+	 	and station.BUS_MEC =#{busMec,jdbcType=SMALLINT} 
+	</if>
+	<if test="chaPayStatus != null" >
+	 	and pay.PAY_STATUS=#{chaPayStatus,jdbcType=SMALLINT} 
+	</if>
+	<if test="profitType == 2 or profitType == 3">
+    	and year(pay.UPDATE_TIME)=#{year}
+   	</if>
+	group by dateName
+	order by dateName asc 
+  </select>
+    <!-- 分页查询充电点充电记录-->
+  <select id="selectStationChaByPage" resultMap="StationChargeModelMap" parameterType="java.util.Map">
+  	select station.ID as stationId,
+	station.STATION_NAME as stationName,
+	count(1) as chaNum,
+	station.ADDRESS as address,
+	station.SCORE as score,
+	(station.FAST_NUM + station.SLOW_NUM) as pileNum,
+	sum(truncate(pay.SERVICE_FEE*#{rate},2)) as serviceFee,
+	sum(truncate(pay.PARK_FEE*#{rate},2)) as parkFee,
+	sum(truncate(pay.CHA_FEE*#{rate},2)) as chaFee
+	from bus_payment pay 
+	left join
+	pob_charging_pile pile on pay.PILE_ID = pile.ID 
+	left join
+	pob_charging_station station on pile.STATION_ID = station.ID
+	where 1=1
+	<if test="busType != null" >
+  	and station.BUS_TYPE=#{busType,jdbcType=SMALLINT} 
+   </if>
+   <if test="busMec != null" >
+     and station.BUS_MEC=#{busMec,jdbcType=SMALLINT} 
+   </if>
+     and (select count(1) from  bus_payment pay left join pob_charging_pile pile on pile.ID = pay.PILE_ID where pile.STATION_ID=station.ID) > 0
+   <if test="searchStationName != null">
+   		and station.STATION_NAME like concat('%',#{searchStationName},'%' ) 
+   </if>
+	GROUP BY stationId
+  </select>
+     <!-- 分页查询具体某个充电点充电记录 -->
+   <select id="selectChaByPage" resultMap="ChargeModelMap" parameterType="java.util.Map" >
+    select p.PILE_NAME as pileName,
+	u.USERNAME as username,
+    p.PILE_TYPE as pileType,
+    u.PHONE as phone,
+    a.* from
+    <choose>
+    <when test="stationId!=null">
+    (select * from bus_payment where PILE_ID in(select id from pob_charging_pile where STATION_ID=#{stationId,jdbcType=INTEGER})) as a
+    </when>
+    <otherwise>
+    bus_payment a
+    </otherwise>
+    </choose>
+    
+    left join bus_user u on u.id=a.user_id
+    left join pob_charging_pile p on p.id=a.pile_id
+    <if test="stationId==null">
+     left join pob_charging_station station on station.id=p.station_id
+    </if>
+    where 1=1
+    <if test="stationId==null">
+     	and station.BUS_MEC=#{busMec,jdbcType=INTEGER}
+    	and station.BUS_TYPE=#{busType,jdbcType=SMALLINT} 
+     </if>
+    <if test="searchPileName != null">
+   	and p.PILE_NAME like concat('%',#{searchPileName},'%' ) 
+   </if>
+   <if test="year != null">
+   	and year(a.UPDATE_TIME) = #{year}
+   </if>
+   <if test="month != null">
+   	and month(a.UPDATE_TIME) = #{month}
+   </if>
+    order by a.UPDATE_TIME desc
+   <if test="maxLimit != null">
+    limit #{maxLimit}
+   </if>
+  </select>
+      <!-- 统计充电桩收益排行 countType：1按年2按月3按季度  -->
+  <select id="countProfit" resultMap="ProfitModelMap" parameterType="java.util.Map">
+  select 
+  a.*,
+  (IFNULL(a.serviceMoney,0)+ IFNULL(a.parkMoney,0)+IFNULL(a.chaMoney,0)) as totalMoney 
+  from
+  (
+  select 
+  	sum(truncate(pay.SERVICE_FEE*#{rate},2)) as serviceMoney,
+  	sum(truncate(pay.PARK_FEE*#{rate},2)) as parkMoney,
+  	sum(truncate(pay.CHA_FEE*#{rate},2)) as chaMoney,
+	pile.PILE_NAME as pileName
+	from bus_payment pay
+	left join
+	pob_charging_pile pile on pay.PILE_ID=pile.ID
+	left join
+	pob_charging_station station on station.id=pile.STATION_ID
+	where 1=1
+	<if test="busType != null" >
+		and station.BUS_TYPE =#{busType,jdbcType=SMALLINT} 
+	</if>
+	<if test="busMec != null" >
+	 	and station.BUS_MEC =#{busMec,jdbcType=SMALLINT}
+	</if>
+	<if test="chaPayStatus != null" >
+	 	and pay.PAY_STATUS=#{chaPayStatus,jdbcType=SMALLINT}
+	</if>
+	<if test="profitType == 2" >
+	 	and DATE_FORMAT(pay.UPDATE_TIME,'%Y-%m')=DATE_FORMAT(now(),'%Y-%m')
+	</if>
+	group by pile.ID
+  ) as a
+  order by totalMoney desc
+  <if test="size != null" >
+    limit ${size}
+  </if>
+  </select>
+    <select id="selectOneRecordByExample" resultMap="BaseResultMap" parameterType="com.holley.charging.model.bus.BusPaymentExample" >
+    select
+    <if test="distinct" >
+      distinct
+    </if>
+    <include refid="Base_Column_List" />
+    from bus_payment
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null" >
+      order by ${orderByClause}
+    </if>
+  </select>
+  <select id="selectPaymentByMap" resultMap="BaseResultMap" parameterType="java.util.Map">
+  	select payment.* from `bus_payment` payment
+	left join pob_charging_pile pile on payment.PILE_ID = pile.ID
+	left join pob_charging_station station on station.ID = pile.STATION_ID
+	where 1=1
+	<if test="busMec != null">
+		and station.BUS_MEC = #{busMec,jdbcType=INTEGER}
+	</if>
+	<if test="busType != null">
+		and station.BUS_TYPE = #{busType,jdbcType=SMALLINT}
+	</if>
+	<if test="payStatus != null">
+		and payment.PAY_STATUS = #{payStatus,jdbcType=SMALLINT}
+	</if>
+	<if test="isBill != null">
+		and payment.IS_BILL = #{isBill,jdbcType=SMALLINT}
+	</if>
+	<if test="year != null">
+		and year(payment.UPDATE_TIME) = #{year}
+	</if>
+	<if test="month != null">
+		and month(payment.UPDATE_TIME) = #{month}
+	</if>
+		order by payment.UPDATE_TIME ASC
+  </select>
+  <select id="getTotalChaFeeByMap" resultMap="ChargeModelMap" parameterType="java.util.Map">
+    select
+    SUM(CHA_FEE) totalChaFeeOut,
+    SUM(SERVICE_FEE) totalServiceFeeOut,
+    SUM(PARK_FEE) totalParkFeeOut 
+    from
+  	bus_payment
+  	where 1=1
+  	<if test="isGroup == null">
+  	and USER_ID = #{userId,jdbcType=INTEGER}
+  	</if>
+  	<if test="isGroup != null">
+  	and USER_ID in
+  	 <foreach item="item" index="index" collection="list" open="(" separator="," close=")">  
+  		#{item}  
+ 	 </foreach>
+  	</if>
+  	and PAY_STATUS = #{payStatus,jdbcType=SMALLINT}
+  	<if test="year != null">
+  	and year(UPDATE_TIME) = #{year}
+  	</if>
+  	<if test="month != null">
+  	and month(UPDATE_TIME) = #{month}
+  	</if>
+  </select>
+    <update id="updatePaymentBatch" parameterType="java.util.List">
+	 <foreach collection="list" item="item" separator=";">  
+       update bus_payment
+       <set>  
+       IS_BILL = ${item.isBill}
+       </set> 
+       <where>
+       ID = ${item.id}
+       </where> 
+     </foreach>  
+  </update>
+  
+  <select id="selectTradeDetailByParamByPage" parameterType="java.util.Map" resultType="com.holley.charging.model.app.TradeRecord">
+       SELECT pile.ID as pileid, CONCAT(s.STATION_NAME,' ',pile.PILE_NAME) AS name,1 AS type,
+	       pay.UPDATE_TIME AS datatime,pay.SHOULD_MONEY AS fee,pay.PAY_STATUS AS status
+	  FROM pob_charging_station s,pob_charging_pile pile,bus_payment pay
+	 WHERE pile.STATION_ID = s.ID
+	   AND pile.ID = pay.PILE_ID
+	   AND s.BUS_MEC = #{busmec}
+	   AND s.BUS_TYPE = #{bustype}
+	   AND pay.IS_BILL = 2
+	   AND pay.DEAL_STATUS = 2
+	   AND pay.UPDATE_TIME &gt;= #{startdate}
+	   AND pay.UPDATE_TIME &lt; #{enddate}
+
+	UNION ALL
+
+	SELECT pile.ID as pileid,CONCAT(s.STATION_NAME,' ',pile.PILE_NAME) AS name,2 AS type,
+		   app.ADD_TIME AS datatime,app.APP_FEE AS fee,app.PAY_STATUS AS status
+	  FROM pob_charging_station s,pob_charging_pile pile,bus_appointment app
+	 WHERE pile.STATION_ID = s.ID
+	   AND pile.ID = app.PILE_ID
+	   AND s.BUS_MEC = #{busmec}
+	   AND s.BUS_TYPE = #{bustype}
+	   AND app.IS_BILL = 2
+	   AND app.ADD_TIME &gt;= #{startdate}
+	   AND app.ADD_TIME &lt; #{enddate}
+  </select>
+  
+      <!-- 导出所有充电点充电统计Excel-->
+  <select id="exportStationCha" resultMap="StationChargeModelMap" parameterType="java.util.Map">
+  	select station.ID as stationId,
+	station.STATION_NAME as stationName,
+	count(1) as chaNum,
+	station.ADDRESS as address,
+	station.SCORE as score,
+	(station.FAST_NUM + station.SLOW_NUM) as pileNum,
+	sum(truncate(pay.SERVICE_FEE*#{rate},2)) as serviceFee,
+	sum(truncate(pay.PARK_FEE*#{rate},2)) as parkFee,
+	sum(truncate(pay.CHA_FEE*#{rate},2)) as chaFee
+	from bus_payment pay 
+	left join
+	pob_charging_pile pile on pay.PILE_ID = pile.ID 
+	left join
+	pob_charging_station station on pile.STATION_ID = station.ID
+	where 1=1
+	<if test="busType != null" >
+  	and station.BUS_TYPE=#{busType,jdbcType=SMALLINT} 
+   </if>
+   <if test="busMec != null" >
+     and station.BUS_MEC=#{busMec,jdbcType=SMALLINT} 
+   </if>
+     and (select count(1) from  bus_payment pay left join pob_charging_pile pile on pile.ID = pay.PILE_ID where pile.STATION_ID=station.ID) > 0
+   <if test="searchStationName != null">
+   		and station.STATION_NAME like concat('%',#{searchStationName},'%' ) 
+   </if>
+	GROUP BY stationId
+  </select>
+  
+       <!-- 导出单个充电点充电记录Excel -->
+   <select id="exportCharge" resultMap="ChargeModelMap" parameterType="java.util.Map" >
+    select p.PILE_NAME as pileName,
+	u.USERNAME as username,
+    p.PILE_TYPE as pileType,
+    u.PHONE as phone,
+    a.* from
+    <choose>
+    <when test="stationId!=null">
+    (select * from bus_payment where PILE_ID in(select id from pob_charging_pile where STATION_ID=#{stationId,jdbcType=INTEGER})) as a
+    </when>
+    <otherwise>
+    bus_payment a
+    </otherwise>
+    </choose>
+    
+    left join bus_user u on u.id=a.user_id
+    left join pob_charging_pile p on p.id=a.pile_id
+    <if test="stationId==null">
+     left join pob_charging_station station on station.id=p.station_id
+    </if>
+    where 1=1
+    <if test="stationId==null">
+     	and station.BUS_MEC=#{busMec,jdbcType=INTEGER}
+    	and station.BUS_TYPE=#{busType,jdbcType=SMALLINT} 
+     </if>
+    <if test="searchPileName != null">
+   	and p.PILE_NAME like concat('%',#{searchPileName},'%' ) 
+   </if>
+   <if test="year != null">
+   	and year(a.UPDATE_TIME) = #{year}
+   </if>
+   <if test="month != null">
+   	and month(a.UPDATE_TIME) = #{month}
+   </if>
+   <if test="startTime != null">
+     and a.UPDATE_TIME &gt;= #{startTime}
+   </if>
+   <if test="endTime != null">
+  	and a.UPDATE_TIME &lt;= #{endTime}
+   </if>
+   	order by a.UPDATE_TIME desc
+  </select>
+  <!-- 查询交易完成并已支付的交易记录 -->
+  <select id="selectFinishedPaymentByPage" parameterType="java.util.Map" resultType="com.holley.charging.model.app.ChargeRecordIntro">
+  	SELECT pay.ID,pay.PILE_ID pileid,pay.PAY_STATUS paystatus,pay.START_TIME starttime,truncate(pay.SHOULD_MONEY,2) fee,com.ID commentid
+	  FROM bus_payment pay LEFT JOIN bus_pile_comment com
+		ON pay.ID = com.CHARGERECORD_ID
+	 WHERE pay.USER_ID = #{userid}
+	   AND pay.DEAL_STATUS = 2
+	   AND pay.PAY_STATUS = 3
+	   AND pay.END_TIME is NOT NULL
+  GROUP BY pay.ID <!-- 避免充电记录订单号相同时，对同一充电记录重复评论，而使查询结果产生重复记录 -->
+  ORDER BY pay.START_TIME DESC
+  </select>
+  <!-- 查询交易未完成或支付未完成的交易记录 -->
+  <select id="selectUnfinishedPaymentByPage" parameterType="java.util.Map" resultType="com.holley.charging.model.app.ChargeRecordIntro">
+	  	SELECT pay.ID,pay.PILE_ID pileid,pay.PAY_STATUS paystatus,pay.START_TIME starttime,truncate(pay.SHOULD_MONEY,2) fee
+		  FROM bus_payment pay 
+		 WHERE pay.USER_ID = #{userid}
+		   AND pay.PAY_STATUS != 3
+	  ORDER BY pay.START_TIME DESC
+  </select>
+  <select id="selectUserChaByPage" resultType="com.holley.charging.model.bus.BusPayment"   parameterType="java.util.Map" >
+  	select 
+    user.USERNAME userName,cha.ID id,cha.USER_ID userId,cha.PILE_ID pileId,cha.TRADE_NO tradeNo,cha.CHA_MODE chaMode,
+    cha.DEAL_STATUS dealStatus,cha.PARK_FEE parkFee,cha.CHA_FEE chaFee,cha.SERVICE_FEE serviceFee,
+    cha.START_TIME startTime,cha.END_TIME endTime,cha.CHA_LEN chaLen,cha.CHA_POWER chaPower,
+    cha.SHOULD_MONEY shouldMoney,cha.ACTUAL_MONEY actualMoney,cha.PAY_WAY payWay,cha.ACCOUNT_INFO accountInfo,
+    cha.PAY_STATUS payStatus,cha.IS_BILL isBill,cha.UPDATE_TIME updateTime
+    from bus_payment cha left join bus_user user
+  	on cha.USER_ID = user.ID
+    where 1=1
+    <if test="isGroup == null">
+    and  cha.USER_ID = #{userId,jdbcType=INTEGER}
+    </if>
+   	<if test="isGroup != null">
+     	and cha.USER_ID in
+  	 <foreach item="item" index="index" collection="list" open="(" separator="," close=")">  
+  		#{item}  
+ 	 </foreach>
+   	</if>
+   	<if test="userName != null">
+   		and user.USERNAME like CONCAT('%',#{userName},'%')  
+   	</if>
+     <if test="startTime != null">
+    	and cha.UPDATE_TIME &gt;= #{startTime,jdbcType=TIMESTAMP}
+    </if>
+   	<if test="endTime != null">
+   	 	and cha.UPDATE_TIME &lt;= #{endTime,jdbcType=TIMESTAMP}
+    </if>
+    	order by cha.UPDATE_TIME desc
+    <if test="maxLimit != null">
+    	limit #{maxLimit}
+    </if>
+  </select>
+  <!-- 非系统用户统计数据 -->
+  <select id="selectPaymentNoUserAllData" parameterType="java.util.Map" resultMap="BaseResultMap">
+  SELECT count(1) id,SUM(pay.CHA_POWER) chaPower,SUM(pay.CHA_FEE) chaFee,SUM(pay.SERVICE_FEE) serviceFee,
+  SUM(pay.CHA_LEN) chaLen,SUM(pay.SHOULD_MONEY) shouldMoney
+  FROM bus_payment pay,pob_charging_pile p,pob_charging_station s
+	   WHERE pay.PILE_ID = p.ID
+	   AND p.STATION_ID = s.ID
+	   AND pay.USER_ID &lt;= 0
+	   AND s.STATION_TO_TYPE = 1
+	   	<if test="searchstation != null">
+			AND (s.STATION_NAME LIKE concat('%',#{searchstation},'%' )  OR s.ADDRESS LIKE concat('%',#{searchstation},'%' ))
+		</if>
+		<if test="searchtradeno != null">
+			AND (pay.TRADE_NO LIKE concat('%',#{searchtradeno},'%')  OR pay.ACCOUNT_INFO LIKE concat('%',#{searchtradeno},'%' ))
+		</if>
+		<if test="dealstatus != null">
+			AND pay.DEAL_STATUS = #{dealstatus}
+		</if>
+		<if test="paystatus != null">
+			AND pay.PAY_STATUS = #{paystatus}
+		</if>
+		<if test="isbill != null">
+			AND pay.IS_BILL = #{isbill}
+		</if>
+		<if test="startdate != null">
+	    	AND pay.END_TIME &gt;= #{startdate}
+	    </if>
+	   	<if test="enddate != null">
+	   	 	AND pay.END_TIME &lt;= #{enddate}
+	    </if>
+	    <if test="startupdatedate != null">
+	    	AND pay.UPDATE_TIME &gt;= #{startupdatedate}
+	    </if>
+	   	<if test="endupdatedate != null">
+	   	 	AND pay.UPDATE_TIME &lt;= #{endupdatedate}
+	    </if>
+	    <if test="stationIds != null">
+	    	AND s.ID IN
+		    <foreach collection="stationIds" index="index" item="item" open="(" separator="," close=")">  
+	        	#{item}  
+	    	</foreach>  
+	    </if>
+	  <!--   <if test="stationId != null">
+	    	AND s.ID = #{stationId}
+	    </if> -->
+	    <if test="busMec != null">
+	    	AND s.BUS_MEC = #{busMec}
+	    </if>
+  </select>
+    <!-- 系统用户统计数据 -->
+  <select id="selectPaymentAllData" parameterType="java.util.Map" resultMap="BaseResultMap">
+   SELECT count(1) id,SUM(pay.CHA_POWER) chaPower,SUM(pay.CHA_FEE) chaFee,SUM(pay.SERVICE_FEE) serviceFee,
+   SUM(pay.CHA_LEN) chaLen,SUM(pay.SHOULD_MONEY) shouldMoney
+   FROM bus_payment pay ,bus_user u,pob_charging_pile p,pob_charging_station s,bus_user_info info
+	   WHERE pay.USER_ID = u.ID
+	   AND pay.PILE_ID = p.ID
+	   AND p.STATION_ID = s.ID
+	   AND info.ID = u.INFO_ID
+	   AND u.USER_TYPE = 3
+	   AND s.STATION_TO_TYPE = 1
+	    <if test="searchuser != null">
+			AND (info.REAL_NAME LIKE concat('%',#{searchuser},'%' )  OR u.PHONE LIKE concat('%',#{searchuser},'%' ))
+		</if>
+		<if test="searchstation != null">
+			AND (s.STATION_NAME LIKE concat('%',#{searchstation},'%' )  OR s.ADDRESS LIKE concat('%',#{searchstation},'%' ))
+		</if>
+		<if test="searchtradeno != null">
+			AND (pay.PLATE_NUM LIKE concat('%',#{searchtradeno},'%')  OR pay.ACCOUNT_INFO LIKE concat('%',#{searchtradeno},'%' ))
+		</if>
+		<if test="dealstatus != null">
+			AND pay.DEAL_STATUS = #{dealstatus}
+		</if>
+		<if test="paystatus != null">
+			AND pay.PAY_STATUS = #{paystatus}
+		</if>
+		<if test="isbill != null">
+			AND pay.IS_BILL = #{isbill}
+		</if>
+		<if test="startdate != null">
+	    	AND pay.END_TIME &gt;= #{startdate}
+	    </if>
+	   	<if test="enddate != null">
+	   	 	AND pay.END_TIME &lt;= #{enddate}
+	    </if>
+	    <if test="startupdatedate != null">
+	    	AND pay.UPDATE_TIME &gt;= #{startupdatedate}
+	    </if>
+	   	<if test="endupdatedate != null">
+	   	 	AND pay.UPDATE_TIME &lt;= #{endupdatedate}
+	    </if>
+	    <if test="stationIds != null">
+	    	AND s.ID IN
+		    <foreach collection="stationIds" index="index" item="item" open="(" separator="," close=")">  
+	        	#{item}  
+	    	</foreach>  
+	    </if>
+	    <!-- <if test="stationId != null">
+	    	AND s.ID = #{stationId}
+	    </if> -->
+	    <if test="busMec != null">
+	    	AND s.BUS_MEC = #{busMec}
+	    </if>
+  </select>
+  
+    <select id="selectBikePaymentAllData" parameterType="java.util.Map" resultMap="BaseResultMap">
+   SELECT count(1) id,SUM(pay.CHA_POWER) chaPower,SUM(bikepay.MONEY) chaFee,0 serviceFee,
+   SUM(pay.CHA_LEN) chaLen,SUM(bikepay.MONEY) shouldMoney
+   FROM bus_payment pay ,bus_user u,pob_charging_pile p,pob_charging_station s,bus_user_info info,bus_bike_payment bikepay
+	   WHERE pay.USER_ID = u.ID
+	   AND pay.PILE_ID = p.ID
+	   AND p.STATION_ID = s.ID
+	   AND info.ID = u.INFO_ID
+	   AND pay.TRADE_NO = bikepay.TRADE_NO
+	   AND u.USER_TYPE = 3
+	   AND s.STATION_TO_TYPE = 2
+	    <if test="searchuser != null">
+			AND (info.REAL_NAME LIKE concat('%',#{searchuser},'%' )  OR u.PHONE LIKE concat('%',#{searchuser},'%' ))
+		</if>
+		<if test="searchstation != null">
+			AND (s.STATION_NAME LIKE concat('%',#{searchstation},'%' )  OR s.ADDRESS LIKE concat('%',#{searchstation},'%' ))
+		</if>
+		<if test="searchtradeno != null">
+			AND (pay.PLATE_NUM LIKE concat('%',#{searchtradeno},'%')  OR pay.ACCOUNT_INFO LIKE concat('%',#{searchtradeno},'%' ))
+		</if>
+		<if test="dealstatus != null">
+			AND pay.DEAL_STATUS = #{dealstatus}
+		</if>
+		<if test="paystatus != null">
+			AND pay.PAY_STATUS = #{paystatus}
+		</if>
+		<if test="isbill != null">
+			AND pay.IS_BILL = #{isbill}
+		</if>
+		<if test="startdate != null">
+	    	AND pay.END_TIME &gt;= #{startdate}
+	    </if>
+	   	<if test="enddate != null">
+	   	 	AND pay.END_TIME &lt;= #{enddate}
+	    </if>
+	    <if test="startupdatedate != null">
+	    	AND pay.UPDATE_TIME &gt;= #{startupdatedate}
+	    </if>
+	   	<if test="endupdatedate != null">
+	   	 	AND pay.UPDATE_TIME &lt;= #{endupdatedate}
+	    </if>
+	    <if test="stationIds != null">
+	    	AND s.ID IN
+		    <foreach collection="stationIds" index="index" item="item" open="(" separator="," close=")">  
+	        	#{item}  
+	    	</foreach>  
+	    </if>
+	    <!-- <if test="stationId != null">
+	    	AND s.ID = #{stationId}
+	    </if> -->
+	    <if test="busMec != null">
+	    	AND s.BUS_MEC = #{busMec}
+	    </if>
+  </select>
+  
+   <select id="selectPaymentNoUserByPage" parameterType="java.util.Map" resultMap="ChargeModelMap">
+   	 	SELECT pay.ID,pay.USER_ID,pay.PILE_ID,pay.TRADE_NO,pay.CHA_MODE,pay.START_TIME,pay.END_TIME,pay.CHA_LEN,pay.CHA_POWER,pay.CHA_FEE,pay.SERVICE_FEE,
+       	   	   pay.PARK_FEE,pay.SHOULD_MONEY,pay.ACTUAL_MONEY,pay.DEAL_STATUS,pay.PAY_STATUS,pay.PAY_WAY,pay.ACCOUNT_INFO,pay.IS_BILL,pay.UPDATE_TIME,
+       	   	   pay.PLATE_NUM plateNum,p.PILE_NAME as pileName,s.STATION_NAME as stationName,s.ADDRESS,s.STATION_TO_TYPE stationToType
+	   FROM bus_payment pay,pob_charging_pile p,pob_charging_station s
+	   WHERE pay.PILE_ID = p.ID
+	   AND p.STATION_ID = s.ID
+	   AND pay.USER_ID &lt;= 0
+	   AND s.STATION_TO_TYPE = 1
+		<if test="searchstation != null">
+			AND (s.STATION_NAME LIKE concat('%',#{searchstation},'%' )  OR s.ADDRESS LIKE concat('%',#{searchstation},'%' ))
+		</if>
+		<if test="searchtradeno != null">
+			AND (pay.PLATE_NUM LIKE concat('%',#{searchtradeno},'%')  OR pay.ACCOUNT_INFO LIKE concat('%',#{searchtradeno},'%' ))
+		</if>
+		<if test="dealstatus != null">
+			AND pay.DEAL_STATUS = #{dealstatus}
+		</if>
+		<if test="paystatus != null">
+			AND pay.PAY_STATUS = #{paystatus}
+		</if>
+		<if test="isbill != null">
+			AND pay.IS_BILL = #{isbill}
+		</if>
+		<if test="startdate != null">
+	    	AND pay.END_TIME &gt;= #{startdate}
+	    </if>
+	   	<if test="enddate != null">
+	   	 	AND pay.END_TIME &lt;= #{enddate}
+	    </if>
+	    <if test="startupdatedate != null">
+	    	AND pay.UPDATE_TIME &gt;= #{startupdatedate}
+	    </if>
+	   	<if test="endupdatedate != null">
+	   	 	AND pay.UPDATE_TIME &lt;= #{endupdatedate}
+	    </if>
+	    <if test="stationIds != null">
+	    	AND s.ID IN
+		    <foreach collection="stationIds" index="index" item="item" open="(" separator="," close=")">  
+	        	#{item}  
+	    	</foreach>  
+	    </if>
+	   <!--  <if test="stationId != null">
+	    	AND s.ID = #{stationId}
+	    </if> -->
+	    
+	    <if test="busMec != null">
+	    	AND s.BUS_MEC = #{busMec}
+	    </if>
+	    ORDER BY pay.UPDATE_TIME DESC
+   </select>
+  
+  
+  <select id="selectPaymentByPage" parameterType="java.util.Map" resultMap="ChargeModelMap">
+  	SELECT pay.ID,pay.USER_ID,pay.PILE_ID,pay.TRADE_NO,pay.CHA_MODE,pay.START_TIME,pay.END_TIME,pay.CHA_LEN,pay.CHA_POWER,pay.CHA_FEE,pay.SERVICE_FEE,
+       	   pay.PARK_FEE,pay.SHOULD_MONEY,pay.ACTUAL_MONEY,pay.DEAL_STATUS,pay.PAY_STATUS,pay.PAY_WAY,pay.ACCOUNT_INFO,pay.IS_BILL,pay.UPDATE_TIME,
+       	   pay.PLATE_NUM plateNum,u.USERNAME,u.PHONE,p.PILE_NAME as pileName,s.STATION_NAME as stationName,s.ADDRESS,info.REAL_NAME realName,s.STATION_TO_TYPE stationToType
+	   FROM bus_payment pay ,bus_user u,pob_charging_pile p,pob_charging_station s,bus_user_info info
+	   WHERE pay.USER_ID = u.ID
+	   AND pay.PILE_ID = p.ID
+	   AND p.STATION_ID = s.ID
+	   AND info.ID = u.INFO_ID
+	   AND u.USER_TYPE = 3
+	   AND s.STATION_TO_TYPE = 1
+	    <if test="searchuser != null">
+			AND (info.REAL_NAME LIKE concat('%',#{searchuser},'%' )  OR u.PHONE LIKE concat('%',#{searchuser},'%' ))
+		</if>
+		<if test="searchstation != null">
+			AND (s.STATION_NAME LIKE concat('%',#{searchstation},'%' )  OR s.ADDRESS LIKE concat('%',#{searchstation},'%' ))
+		</if>
+		<if test="searchtradeno != null">
+			AND (pay.PLATE_NUM LIKE concat('%',#{searchtradeno},'%')  OR pay.ACCOUNT_INFO LIKE concat('%',#{searchtradeno},'%' ))
+		</if>
+		<if test="dealstatus != null">
+			AND pay.DEAL_STATUS = #{dealstatus}
+		</if>
+		<if test="paystatus != null">
+			AND pay.PAY_STATUS = #{paystatus}
+		</if>
+		<if test="isbill != null">
+			AND pay.IS_BILL = #{isbill}
+		</if>
+		<if test="startdate != null">
+	    	AND pay.END_TIME &gt;= #{startdate}
+	    </if>
+	   	<if test="enddate != null">
+	   	 	AND pay.END_TIME &lt;= #{enddate}
+	    </if>
+	    <if test="startupdatedate != null">
+	    	AND pay.UPDATE_TIME &gt;= #{startupdatedate}
+	    </if>
+	   	<if test="endupdatedate != null">
+	   	 	AND pay.UPDATE_TIME &lt;= #{endupdatedate}
+	    </if>
+	    <if test="stationIds != null">
+	    	AND s.ID IN
+		    <foreach collection="stationIds" index="index" item="item" open="(" separator="," close=")">  
+	        	#{item}  
+	    	</foreach>  
+	    </if>
+	   <!--  <if test="stationId != null">
+	    	AND s.ID = #{stationId}
+	    </if> -->
+	     <if test="busMec != null">
+	    	AND s.BUS_MEC = #{busMec}
+	    </if>
+	    ORDER BY pay.UPDATE_TIME DESC
+  </select>
+  
+    <select id="selectBikePaymentByPage" parameterType="java.util.Map" resultMap="ChargeModelMap">
+  	SELECT pay.ID,pay.USER_ID,pay.PILE_ID,pay.TRADE_NO,pay.CHA_MODE,pay.START_TIME,pay.END_TIME,pay.CHA_LEN,pay.CHA_POWER,bikepay.MONEY chaFee,0 serviceFee,
+       	   0 parkFee,bikepay.MONEY shouldMoney,pay.ACTUAL_MONEY,pay.DEAL_STATUS,bikepay.STATUS payStatus, bikepay.PAY_WAY payWay,pay.ACCOUNT_INFO,pay.IS_BILL,pay.UPDATE_TIME,
+       	   pay.PLATE_NUM plateNum,u.USERNAME,u.PHONE,p.PILE_NAME as pileName,s.STATION_NAME as stationName,s.ADDRESS,info.REAL_NAME realName,s.STATION_TO_TYPE stationToType
+	   FROM bus_payment pay ,bus_user u,pob_charging_pile p,pob_charging_station s,bus_user_info info,bus_bike_payment bikepay
+	   WHERE pay.USER_ID = u.ID
+	   AND pay.PILE_ID = p.ID
+	   AND p.STATION_ID = s.ID
+	   AND info.ID = u.INFO_ID
+	   AND pay.TRADE_NO = bikepay.TRADE_NO
+	   AND u.USER_TYPE = 3
+	   AND s.STATION_TO_TYPE=2
+	    <if test="searchuser != null">
+			AND (info.REAL_NAME LIKE concat('%',#{searchuser},'%' )  OR u.PHONE LIKE concat('%',#{searchuser},'%' ))
+		</if>
+		<if test="searchstation != null">
+			AND (s.STATION_NAME LIKE concat('%',#{searchstation},'%' )  OR s.ADDRESS LIKE concat('%',#{searchstation},'%' ))
+		</if>
+		<if test="searchtradeno != null">
+			AND (pay.PLATE_NUM LIKE concat('%',#{searchtradeno},'%')  OR pay.ACCOUNT_INFO LIKE concat('%',#{searchtradeno},'%' ))
+		</if>
+		<if test="dealstatus != null">
+			AND pay.DEAL_STATUS = #{dealstatus}
+		</if>
+		<if test="paystatus != null">
+			AND pay.PAY_STATUS = #{paystatus}
+		</if>
+		<if test="isbill != null">
+			AND pay.IS_BILL = #{isbill}
+		</if>
+		<if test="startdate != null">
+	    	AND pay.END_TIME &gt;= #{startdate}
+	    </if>
+	   	<if test="enddate != null">
+	   	 	AND pay.END_TIME &lt;= #{enddate}
+	    </if>
+	    <if test="startupdatedate != null">
+	    	AND pay.UPDATE_TIME &gt;= #{startupdatedate}
+	    </if>
+	   	<if test="endupdatedate != null">
+	   	 	AND pay.UPDATE_TIME &lt;= #{endupdatedate}
+	    </if>
+	    <if test="stationIds != null">
+	    	AND s.ID IN
+		    <foreach collection="stationIds" index="index" item="item" open="(" separator="," close=")">  
+	        	#{item}  
+	    	</foreach>  
+	    </if>
+	   <!--  <if test="stationId != null">
+	    	AND s.ID = #{stationId}
+	    </if> -->
+	     <if test="busMec != null">
+	    	AND s.BUS_MEC = #{busMec}
+	    </if>
+	    ORDER BY pay.UPDATE_TIME DESC
+  </select>
+  
+  <select id="selectPaymentDetail" parameterType="java.lang.Integer" resultMap="ChargeModelMap">
+  	SELECT pay.ID,pay.USER_ID,pay.PILE_ID,pay.TRADE_NO,pay.CHA_MODE,pay.START_TIME,pay.END_TIME,pay.CHA_LEN,pay.CHA_POWER,pay.CHA_FEE,pay.SERVICE_FEE,
+       	   pay.PARK_FEE,pay.SHOULD_MONEY,pay.ACTUAL_MONEY,pay.DEAL_STATUS,pay.PAY_STATUS,pay.PAY_WAY,pay.ACCOUNT_INFO,pay.IS_BILL,pay.UPDATE_TIME,
+		   u.USERNAME,u.PHONE,p.PILE_NAME as pileName,s.STATION_NAME as stationName,s.ADDRESS,s.STATION_TO_TYPE stationToType
+	  FROM bus_payment pay ,bus_user u,pob_charging_pile p,pob_charging_station s
+	  WHERE pay.USER_ID = u.ID
+	   AND pay.PILE_ID = p.ID
+	   AND p.STATION_ID = s.ID
+	   AND u.USER_TYPE = 3
+	   AND s.STATION_TO_TYPE = 1
+	   AND pay.ID = #{id}
+  </select>
+  
+ <select id="selectBikePaymentDetail" parameterType="java.lang.Integer" resultMap="ChargeModelMap">
+  	SELECT pay.ID,pay.USER_ID,pay.PILE_ID,pay.TRADE_NO,pay.CHA_MODE,pay.START_TIME,pay.END_TIME,pay.CHA_LEN,pay.CHA_POWER,bikepay.MONEY chaFee,0 serviceFee,
+       	  0 parkFee,bikepay.MONEY shouldMoney,pay.ACTUAL_MONEY,pay.DEAL_STATUS,bikepay.STATUS payStatus,bikepay.PAY_WAY payWay,pay.ACCOUNT_INFO,pay.IS_BILL,pay.UPDATE_TIME,
+		   u.USERNAME,u.PHONE,p.PILE_NAME as pileName,s.STATION_NAME as stationName,s.ADDRESS,s.STATION_TO_TYPE stationToType
+	   FROM bus_payment pay ,bus_user u,pob_charging_pile p,pob_charging_station s,bus_bike_payment bikepay
+	   WHERE pay.TRADE_NO = bikepay.TRADE_NO
+	   AND pay.USER_ID = u.ID
+	   AND pay.PILE_ID = p.ID
+	   AND p.STATION_ID = s.ID
+	   AND u.USER_TYPE = 3
+	   AND s.STATION_TO_TYPE = 2
+	   AND pay.ID = #{id}
+  </select>
+  
+  <select id="selectNoUserPaymentDetail" parameterType="java.lang.Integer" resultMap="ChargeModelMap">
+  	SELECT pay.ID,pay.USER_ID,pay.PILE_ID,pay.TRADE_NO,pay.CHA_MODE,pay.START_TIME,pay.END_TIME,pay.CHA_LEN,pay.CHA_POWER,pay.CHA_FEE,pay.SERVICE_FEE,
+       	   pay.PARK_FEE,pay.SHOULD_MONEY,pay.ACTUAL_MONEY,pay.DEAL_STATUS,pay.PAY_STATUS,pay.PAY_WAY,pay.ACCOUNT_INFO,pay.IS_BILL,pay.UPDATE_TIME,
+		   p.PILE_NAME as pileName,s.STATION_NAME as stationName,s.ADDRESS 
+	  	   FROM bus_payment pay,pob_charging_pile p,pob_charging_station s
+	       WHERE pay.PILE_ID = p.ID
+	       AND p.STATION_ID = s.ID
+	       AND pay.USER_ID &lt;= 0
+	       AND pay.ID = #{id}
+	       AND s.STATION_TO_TYPE = 1
+  </select>
+  
+  <select id="selectBadCardPaymentByMap" resultMap="ChargeModelMap" parameterType="java.util.Map" >
+     SELECT	pay.*,station.STATION_NAME stationName,station.ADDRESS address,
+     	    pile.PILE_NAME pileName,pile.PILE_TYPE pileType,users.PHONE phone,
+     	    record.PAY_NO payNo
+   			FROM bus_payment pay LEFT JOIN pob_charging_pile pile
+			on pay.PILE_ID = pile.ID 
+			LEFT JOIN pob_charging_station station
+			on pile.STATION_ID = station.ID 
+			LEFT JOIN bus_user users
+			on pay.USER_ID = users.ID
+			LEFT JOIN dcs_chargerecord record
+			on pay.TRADE_NO = record.TRADE_NO
+			where record.PAY_NO in
+			<foreach item="item" index="index" collection="list" open="(" separator="," close=")">  
+  				#{item}  
+ 			</foreach> 
+ 			and  record.CARD_NO = #{cardNo}
+   </select>
+   
+   <select id="selectBusPaymentList"  parameterType="java.util.Map" resultMap="ChargeModelMap" >
+   	   SELECT pay.ID id,station.STATION_NAME stationName FROM 
+   			bus_payment pay LEFT JOIN pob_charging_pile pile
+			on pay.PILE_ID = pile.ID 
+			LEFT JOIN pob_charging_station station
+			on pile.STATION_ID = station.ID 
+   			WHERE pay.ID in
+			<foreach item="item" index="index" collection="list" open="(" separator="," close=")">  
+  				#{item}
+ 			</foreach> 
+   </select>
+</mapper>

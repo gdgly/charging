@@ -1,0 +1,534 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.holley.charging.dao.bus.BusUserMapper" >
+  <resultMap id="BaseResultMap" type="com.holley.charging.model.bus.BusUser" >
+    <id column="ID" property="id" jdbcType="INTEGER" />
+    <result column="USERNAME" property="username" jdbcType="VARCHAR" />
+    <result column="PASSWORD" property="password" jdbcType="VARCHAR" />
+    <result column="PAY_PASSWORD" property="payPassword" jdbcType="VARCHAR" />
+    <result column="HEAD_IMG" property="headImg" jdbcType="VARCHAR" />
+    <result column="IS_LOCK" property="isLock" jdbcType="SMALLINT" />
+    <result column="REAL_STATUS" property="realStatus" jdbcType="SMALLINT" />
+    <result column="EMAIL" property="email" jdbcType="VARCHAR" />
+    <result column="EMAIL_STATUS" property="emailStatus" jdbcType="SMALLINT" />
+    <result column="PHONE" property="phone" jdbcType="VARCHAR" />
+    <result column="PHONE_STATUS" property="phoneStatus" jdbcType="SMALLINT" />
+    <result column="USER_TYPE" property="userType" jdbcType="SMALLINT" />
+    <result column="INFO_ID" property="infoId" jdbcType="INTEGER" />
+    <result column="GROUP_ID" property="groupId" jdbcType="INTEGER" />
+    <result column="REGIST_TIME" property="registTime" jdbcType="TIMESTAMP" />
+    <result column="REGIST_IP" property="registIp" jdbcType="VARCHAR" />
+    <result column="usableMoney" property="usableMoney" jdbcType="DECIMAL" />
+    <result column="realName" property="realName" jdbcType="VARCHAR" />
+    
+  </resultMap>
+  <resultMap id="SubAccountModelMap" type="com.holley.charging.model.def.SubAccountModel" >
+    <result column="userId" property="userId" jdbcType="INTEGER" />
+    <result column="userName" property="userName" jdbcType="VARCHAR" />
+    <result column="phone" property="phone" jdbcType="VARCHAR" />
+    <result column="isLock" property="isLock" jdbcType="SMALLINT" />
+    <result column="roleName" property="roleName" jdbcType="VARCHAR" />
+    <result column="addTime" property="addTime" jdbcType="TIMESTAMP" />
+    <result column="status" property="status" jdbcType="SMALLINT" />
+    <result column="roleType" property="roleType" jdbcType="SMALLINT" />
+  </resultMap>
+  <resultMap id="UserDetailResultMap" type="com.holley.charging.model.bus.BusUser" extends="BaseResultMap">
+  	<result column="ROLEID" property="roleid" jdbcType="INTEGER" />
+    <result column="ROLENAME" property="rolename" jdbcType="VARCHAR" />
+  </resultMap>
+  <sql id="Example_Where_Clause" >
+    <where >
+      <foreach collection="oredCriteria" item="criteria" separator="or" >
+        <if test="criteria.valid" >
+          <trim prefix="(" suffix=")" prefixOverrides="and" >
+            <foreach collection="criteria.criteria" item="criterion" >
+              <choose >
+                <when test="criterion.noValue" >
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue" >
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue" >
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue" >
+                  and ${criterion.condition}
+                  <foreach collection="criterion.value" item="listItem" open="(" close=")" separator="," >
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause" >
+    <where >
+      <foreach collection="example.oredCriteria" item="criteria" separator="or" >
+        <if test="criteria.valid" >
+          <trim prefix="(" suffix=")" prefixOverrides="and" >
+            <foreach collection="criteria.criteria" item="criterion" >
+              <choose >
+                <when test="criterion.noValue" >
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue" >
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue" >
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue" >
+                  and ${criterion.condition}
+                  <foreach collection="criterion.value" item="listItem" open="(" close=")" separator="," >
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Base_Column_List" >
+    ID, USERNAME, PASSWORD, PAY_PASSWORD, HEAD_IMG, IS_LOCK, REAL_STATUS, EMAIL, EMAIL_STATUS, 
+    PHONE, PHONE_STATUS, USER_TYPE, INFO_ID, GROUP_ID, REGIST_TIME, REGIST_IP
+  </sql>
+  <select id="selectByExample" resultMap="BaseResultMap" parameterType="com.holley.charging.model.bus.BusUserExample" >
+    select
+    <if test="distinct" >
+      distinct
+    </if>
+    <include refid="Base_Column_List" />
+    from bus_user
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null" >
+      order by ${orderByClause}
+    </if>
+  </select>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from bus_user
+    where ID = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from bus_user
+    where ID = #{id,jdbcType=INTEGER}
+  </delete>
+  <delete id="deleteByExample" parameterType="com.holley.charging.model.bus.BusUserExample" >
+    delete from bus_user
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+  </delete>
+  <insert id="insert" parameterType="com.holley.charging.model.bus.BusUser" useGeneratedKeys="true" keyProperty="id">
+    insert into bus_user (ID, USERNAME, PASSWORD, 
+      PAY_PASSWORD, HEAD_IMG, IS_LOCK, 
+      REAL_STATUS, EMAIL, EMAIL_STATUS, 
+      PHONE, PHONE_STATUS, USER_TYPE, 
+      INFO_ID, GROUP_ID, REGIST_TIME, 
+      REGIST_IP)
+    values (#{id,jdbcType=INTEGER}, #{username,jdbcType=VARCHAR}, #{password,jdbcType=VARCHAR}, 
+      #{payPassword,jdbcType=VARCHAR}, #{headImg,jdbcType=VARCHAR}, #{isLock,jdbcType=SMALLINT}, 
+      #{realStatus,jdbcType=SMALLINT}, #{email,jdbcType=VARCHAR}, #{emailStatus,jdbcType=SMALLINT}, 
+      #{phone,jdbcType=VARCHAR}, #{phoneStatus,jdbcType=SMALLINT}, #{userType,jdbcType=SMALLINT}, 
+      #{infoId,jdbcType=INTEGER}, #{groupId,jdbcType=INTEGER}, #{registTime,jdbcType=TIMESTAMP}, 
+      #{registIp,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.holley.charging.model.bus.BusUser" useGeneratedKeys="true" keyProperty="id">
+    insert into bus_user
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        ID,
+      </if>
+      <if test="username != null" >
+        USERNAME,
+      </if>
+      <if test="password != null" >
+        PASSWORD,
+      </if>
+      <if test="payPassword != null" >
+        PAY_PASSWORD,
+      </if>
+      <if test="headImg != null" >
+        HEAD_IMG,
+      </if>
+      <if test="isLock != null" >
+        IS_LOCK,
+      </if>
+      <if test="realStatus != null" >
+        REAL_STATUS,
+      </if>
+      <if test="email != null" >
+        EMAIL,
+      </if>
+      <if test="emailStatus != null" >
+        EMAIL_STATUS,
+      </if>
+      <if test="phone != null" >
+        PHONE,
+      </if>
+      <if test="phoneStatus != null" >
+        PHONE_STATUS,
+      </if>
+      <if test="userType != null" >
+        USER_TYPE,
+      </if>
+      <if test="infoId != null" >
+        INFO_ID,
+      </if>
+      <if test="groupId != null" >
+        GROUP_ID,
+      </if>
+      <if test="registTime != null" >
+        REGIST_TIME,
+      </if>
+      <if test="registIp != null" >
+        REGIST_IP,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="username != null" >
+        #{username,jdbcType=VARCHAR},
+      </if>
+      <if test="password != null" >
+        #{password,jdbcType=VARCHAR},
+      </if>
+      <if test="payPassword != null" >
+        #{payPassword,jdbcType=VARCHAR},
+      </if>
+      <if test="headImg != null" >
+        #{headImg,jdbcType=VARCHAR},
+      </if>
+      <if test="isLock != null" >
+        #{isLock,jdbcType=SMALLINT},
+      </if>
+      <if test="realStatus != null" >
+        #{realStatus,jdbcType=SMALLINT},
+      </if>
+      <if test="email != null" >
+        #{email,jdbcType=VARCHAR},
+      </if>
+      <if test="emailStatus != null" >
+        #{emailStatus,jdbcType=SMALLINT},
+      </if>
+      <if test="phone != null" >
+        #{phone,jdbcType=VARCHAR},
+      </if>
+      <if test="phoneStatus != null" >
+        #{phoneStatus,jdbcType=SMALLINT},
+      </if>
+      <if test="userType != null" >
+        #{userType,jdbcType=SMALLINT},
+      </if>
+      <if test="infoId != null" >
+        #{infoId,jdbcType=INTEGER},
+      </if>
+      <if test="groupId != null" >
+        #{groupId,jdbcType=INTEGER},
+      </if>
+      <if test="registTime != null" >
+        #{registTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="registIp != null" >
+        #{registIp,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <select id="countByExample" parameterType="com.holley.charging.model.bus.BusUserExample" resultType="java.lang.Integer" >
+    select count(*) from bus_user
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+  </select>
+  <update id="updateByExampleSelective" parameterType="map" >
+    update bus_user
+    <set >
+      <if test="record.id != null" >
+        ID = #{record.id,jdbcType=INTEGER},
+      </if>
+      <if test="record.username != null" >
+        USERNAME = #{record.username,jdbcType=VARCHAR},
+      </if>
+      <if test="record.password != null" >
+        PASSWORD = #{record.password,jdbcType=VARCHAR},
+      </if>
+      <if test="record.payPassword != null" >
+        PAY_PASSWORD = #{record.payPassword,jdbcType=VARCHAR},
+      </if>
+      <if test="record.headImg != null" >
+        HEAD_IMG = #{record.headImg,jdbcType=VARCHAR},
+      </if>
+      <if test="record.isLock != null" >
+        IS_LOCK = #{record.isLock,jdbcType=SMALLINT},
+      </if>
+      <if test="record.realStatus != null" >
+        REAL_STATUS = #{record.realStatus,jdbcType=SMALLINT},
+      </if>
+      <if test="record.email != null" >
+        EMAIL = #{record.email,jdbcType=VARCHAR},
+      </if>
+      <if test="record.emailStatus != null" >
+        EMAIL_STATUS = #{record.emailStatus,jdbcType=SMALLINT},
+      </if>
+      <if test="record.phone != null" >
+        PHONE = #{record.phone,jdbcType=VARCHAR},
+      </if>
+      <if test="record.phoneStatus != null" >
+        PHONE_STATUS = #{record.phoneStatus,jdbcType=SMALLINT},
+      </if>
+      <if test="record.userType != null" >
+        USER_TYPE = #{record.userType,jdbcType=SMALLINT},
+      </if>
+      <if test="record.infoId != null" >
+        INFO_ID = #{record.infoId,jdbcType=INTEGER},
+      </if>
+      <if test="record.groupId != null" >
+        GROUP_ID = #{record.groupId,jdbcType=INTEGER},
+      </if>
+      <if test="record.registTime != null" >
+        REGIST_TIME = #{record.registTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="record.registIp != null" >
+        REGIST_IP = #{record.registIp,jdbcType=VARCHAR},
+      </if>
+    </set>
+    <if test="_parameter != null" >
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByExample" parameterType="map" >
+    update bus_user
+    set ID = #{record.id,jdbcType=INTEGER},
+      USERNAME = #{record.username,jdbcType=VARCHAR},
+      PASSWORD = #{record.password,jdbcType=VARCHAR},
+      PAY_PASSWORD = #{record.payPassword,jdbcType=VARCHAR},
+      HEAD_IMG = #{record.headImg,jdbcType=VARCHAR},
+      IS_LOCK = #{record.isLock,jdbcType=SMALLINT},
+      REAL_STATUS = #{record.realStatus,jdbcType=SMALLINT},
+      EMAIL = #{record.email,jdbcType=VARCHAR},
+      EMAIL_STATUS = #{record.emailStatus,jdbcType=SMALLINT},
+      PHONE = #{record.phone,jdbcType=VARCHAR},
+      PHONE_STATUS = #{record.phoneStatus,jdbcType=SMALLINT},
+      USER_TYPE = #{record.userType,jdbcType=SMALLINT},
+      INFO_ID = #{record.infoId,jdbcType=INTEGER},
+      GROUP_ID = #{record.groupId,jdbcType=INTEGER},
+      REGIST_TIME = #{record.registTime,jdbcType=TIMESTAMP},
+      REGIST_IP = #{record.registIp,jdbcType=VARCHAR}
+    <if test="_parameter != null" >
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.holley.charging.model.bus.BusUser" >
+    update bus_user
+    <set >
+      <if test="username != null" >
+        USERNAME = #{username,jdbcType=VARCHAR},
+      </if>
+      <if test="password != null" >
+        PASSWORD = #{password,jdbcType=VARCHAR},
+      </if>
+      <if test="payPassword != null" >
+        PAY_PASSWORD = #{payPassword,jdbcType=VARCHAR},
+      </if>
+      <if test="headImg != null" >
+        HEAD_IMG = #{headImg,jdbcType=VARCHAR},
+      </if>
+      <if test="isLock != null" >
+        IS_LOCK = #{isLock,jdbcType=SMALLINT},
+      </if>
+      <if test="realStatus != null" >
+        REAL_STATUS = #{realStatus,jdbcType=SMALLINT},
+      </if>
+      <if test="email != null" >
+        EMAIL = #{email,jdbcType=VARCHAR},
+      </if>
+      <if test="emailStatus != null" >
+        EMAIL_STATUS = #{emailStatus,jdbcType=SMALLINT},
+      </if>
+      <if test="phone != null" >
+        PHONE = #{phone,jdbcType=VARCHAR},
+      </if>
+      <if test="phoneStatus != null" >
+        PHONE_STATUS = #{phoneStatus,jdbcType=SMALLINT},
+      </if>
+      <if test="userType != null" >
+        USER_TYPE = #{userType,jdbcType=SMALLINT},
+      </if>
+      <if test="infoId != null" >
+        INFO_ID = #{infoId,jdbcType=INTEGER},
+      </if>
+      <if test="groupId != null" >
+        GROUP_ID = #{groupId,jdbcType=INTEGER},
+      </if>
+      <if test="registTime != null" >
+        REGIST_TIME = #{registTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="registIp != null" >
+        REGIST_IP = #{registIp,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.holley.charging.model.bus.BusUser" >
+    update bus_user
+    set USERNAME = #{username,jdbcType=VARCHAR},
+      PASSWORD = #{password,jdbcType=VARCHAR},
+      PAY_PASSWORD = #{payPassword,jdbcType=VARCHAR},
+      HEAD_IMG = #{headImg,jdbcType=VARCHAR},
+      IS_LOCK = #{isLock,jdbcType=SMALLINT},
+      REAL_STATUS = #{realStatus,jdbcType=SMALLINT},
+      EMAIL = #{email,jdbcType=VARCHAR},
+      EMAIL_STATUS = #{emailStatus,jdbcType=SMALLINT},
+      PHONE = #{phone,jdbcType=VARCHAR},
+      PHONE_STATUS = #{phoneStatus,jdbcType=SMALLINT},
+      USER_TYPE = #{userType,jdbcType=SMALLINT},
+      INFO_ID = #{infoId,jdbcType=INTEGER},
+      GROUP_ID = #{groupId,jdbcType=INTEGER},
+      REGIST_TIME = #{registTime,jdbcType=TIMESTAMP},
+      REGIST_IP = #{registIp,jdbcType=VARCHAR}
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+  <!-- add -->
+    <select id="selectSimpleByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select
+      USERNAME,HEAD_IMG,PHONE
+    from bus_user
+    where ID = #{id,jdbcType=INTEGER}
+  </select>
+    <!--根据运营商ID查询子账户  -->
+  <select id="selectSubAccounts"   resultMap="SubAccountModelMap" parameterType="java.util.Map">
+	select
+	u.ID as userId, 
+	u.USERNAME as userName,
+	u.PHONE as phone,
+	u.IS_LOCK as isLock,
+	role.ROLENAME as roleName,
+	u.REGIST_TIME as addTime,
+	role.STATUS as status,
+	role.TYPE as roleType 
+	FROM bus_user u 
+	left join sys_accountrole accountRole on u.ID = accountRole.USERID 
+	left join sys_role role on role.ID = accountRole.ROLEID 
+	where 1=1
+	<if test="infoId != null">
+	and u.INFO_ID=#{infoId,jdbcType=INTEGER}
+	</if>
+	<if test="userId != null">
+	and u.ID=#{userId,jdbcType=INTEGER}
+	</if>
+	<if test="roleType != null">
+	and role.TYPE=#{roleType,jdbcType=INTEGER}
+	</if>
+	order by u.ID asc
+  </select>
+  <select id="selectUserRealAndAccount" parameterType="java.lang.Integer"  resultType="com.holley.charging.model.app.UserRealAndAccount">
+	SELECT u.ID AS userid,
+		   u.REAL_STATUS AS realstatus,
+		   a.TOTAL_MONEY AS totalmoney,
+		   a.USABLE_MONEY AS usablemoney,
+		   a.FREEZE_MONEY AS freezemoney
+	 FROM bus_user u,bus_account a
+	WHERE u.ID = a.USER_ID
+	  AND a.`STATUS`
+	  AND u.USER_TYPE = 3
+	  AND u.ID = #{value}
+  </select>
+    <!-- 根据条件查询用户列表 -->
+  <select id="selectBusUserByMap" resultMap="BaseResultMap" parameterType="java.util.Map">
+  	select user.* FROM bus_user user 
+  	left join sys_accountrole accountrole 
+	on user.ID = accountrole.USERID 
+	left join sys_role role on role.ID = accountrole.ROLEID
+	where 1=1
+	<if test="realStatus != null">
+	and user.REAL_STATUS = #{realStatus,jdbcType=SMALLINT}
+	</if>
+	<if test="userType != null">
+	and user.USER_TYPE = #{userType,jdbcType=SMALLINT}
+	</if>
+	<if test="isLock != null">
+	and user.IS_LOCK = #{isLock,jdbcType=SMALLINT}
+	</if>
+	<if test="roleType != null">
+	and role.TYPE = #{roleType,jdbcType=SMALLINT}
+	</if>
+	<if test="infoId != null">
+	and user.INFO_ID = #{infoId,jdbcType=INTEGER}
+	</if>
+  </select>
+  <select id="selectUserByPage" parameterType="java.util.Map" resultMap="BaseResultMap">
+  	SELECT u.ID,u.USERNAME,u.USER_TYPE,u.EMAIL,u.EMAIL_STATUS,u.HEAD_IMG,u.INFO_ID,
+  		   u.IS_LOCK,u.PHONE,u.PHONE_STATUS,u.REAL_STATUS,u.REGIST_IP,u.REGIST_TIME,
+  		   u.GROUP_ID,ar.ROLEID,r.ROLENAME
+  		   <if test="usertype == 3">
+  		   	,account.USABLE_MONEY usableMoney,info.REAL_NAME realName
+  		   </if>
+	FROM bus_user u,sys_accountrole ar,sys_role r
+		   <if test="usertype == 3">
+  		   	,bus_account account,bus_user_info info
+  		   </if>
+ 	WHERE u.ID = ar.USERID
+	AND ar.ROLEID = r.ID
+	 	   <if test="usertype == 3">
+  		   	AND account.USER_ID = u.ID
+  		   	AND info.ID = u.INFO_ID
+  		   </if>
+	<if test="usertype != null">
+		AND u.USER_TYPE = #{usertype}
+	</if>
+	<if test="realstatus != null">
+		AND u.REAL_STATUS = #{realstatus}
+	</if>
+	<if test="islock != null">
+		AND u.IS_LOCK = #{islock}
+	</if>
+	<if test="groupId != null">
+		AND u.GROUP_ID = #{groupId}
+	</if>
+	 <if test="usertype == 3">
+	 	<if test="keyword != null">
+			AND (info.REAL_NAME LIKE concat('%',#{keyword},'%' )  OR u.PHONE LIKE concat('%',#{keyword},'%' ))
+		</if>
+	 </if>
+	  <if test="usertype != 3">
+		<if test="keyword != null">
+			AND (u.USERNAME LIKE concat('%',#{keyword},'%' )  OR u.PHONE LIKE concat('%',#{keyword},'%' ))
+		</if>
+	 </if>
+	
+	ORDER BY u.ID ASC
+  </select>
+  <select id="selectUserByInfo" parameterType="java.util.Map" resultMap="BaseResultMap">
+  	SELECT u.ID,u.USERNAME,u.PASSWORD,u.PAY_PASSWORD,u.HEAD_IMG,u.IS_LOCK,u.REAL_STATUS,u.EMAIL,
+		   u.EMAIL_STATUS, u.PHONE, u.PHONE_STATUS, u.USER_TYPE, u.INFO_ID, u.REGIST_TIME, u.REGIST_IP
+	  FROM bus_user u,sys_accountrole r
+     WHERE u.ID = r.USERID
+       AND u.USER_TYPE = #{usertype}
+       AND u.INFO_ID = #{infoid}
+       <if test="usertype == 2">
+       		AND r.ROLEID = 2
+       </if>
+       <if test="usertype == 3">
+       		AND r.ROLEID = 3
+       </if>
+  </select>
+  <select id="selectBusinessUserByInfoid" parameterType="java.lang.Integer" resultMap="UserDetailResultMap">
+  	SELECT u.ID,u.USERNAME,u.EMAIL,u.PHONE,ar.ROLEID,r.ROLENAME
+     FROM bus_user u,sys_accountrole ar,sys_role r
+    WHERE u.ID = ar.USERID
+      AND ar.ROLEID = r.ID
+      AND u.USER_TYPE = 2
+      AND u.INFO_ID = #{value}
+  </select>
+</mapper>

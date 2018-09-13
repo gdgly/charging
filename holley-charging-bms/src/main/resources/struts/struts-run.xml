@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC  
+    "-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"  
+    "http://struts.apache.org/dtds/struts-2.3.dtd">   
+<struts>
+	<!--交易管理 --> 
+	<package name="run" namespace="/run" extends="struts-base">
+		<!-- 实时监测 -->
+		<action name="monitorList" class="monitoringAction" method="init">
+			<result name="success">/jsp/run/monitorList.jsp</result>
+		</action>
+		<!-- 设备监测地图 -->
+		<action name="deviceMap" class="monitoringAction" method="deviceMapInit">
+			<result name="success">/jsp/run/deviceMap.jsp</result>
+		</action>
+		<!-- 设备告警-->
+		<action name="deviceAlarm" class="monitoringAction" method="deviceAlarmInit">
+			<result name="success">/jsp/run/deviceAlarm.jsp</result>
+		</action>
+		
+	</package>
+	<package name="run_json" namespace="/run" extends="json-base">
+		<action name="monitor_*" class="monitoringAction" method="{1}">
+			<result type="json" />
+		</action>
+	</package>
+</struts>

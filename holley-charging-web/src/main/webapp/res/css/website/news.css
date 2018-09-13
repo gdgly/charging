@@ -1,0 +1,43 @@
+.news{
+	margin-top: 50px;
+}
+
+/* 新闻列表样式 */
+.newslist .list-group-item {
+    position: relative;
+    display: block;
+    padding: 10px 15px;
+    margin-bottom: -1px;
+    background-color: #fff;
+    border: 1px dashed #ddd;
+}
+
+.newslist .list-group-item:first-child {
+    border-top-style: none;
+}
+
+a:hover{
+	text-decoration: none;
+}
+
+a.thumbnail.active, a.thumbnail:focus, a.thumbnail:hover {
+    border-color: #ddd;
+}
+
+/* 新闻类型样式 */
+.newstype .list-group-item{
+    outline-style: none;
+	border-style: none;
+	border-radius: 0;
+	background-color: transparent;
+	color: #555;
+	font-size: 18px;
+}
+
+.newstype .list-group-item.active, .newstype .list-group-item.active:focus, .newstype .list-group-item.active:hover {
+    z-index: 2;
+    color: #f49447;
+    background-color: #f0f0f0;
+    border-style: none;
+    outline-style: none;
+}

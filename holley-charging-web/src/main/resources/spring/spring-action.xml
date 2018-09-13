@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:flex="http://www.springframework.org/schema/flex"
+	xsi:schemaLocation="       
+      http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd       
+      http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd       
+      http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-4.0.xsd       
+      http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd       
+      http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+      http://www.springframework.org/schema/flex
+      http://www.springframework.org/schema/flex/spring-flex-1.0.xsd"
+	default-autowire="byName">		
+	<!-- 公共 -->
+	<bean id="imageCodeAction" class="com.holley.charging.common.action.ImageCodeAction" scope="prototype"/>
+	
+	<!-- 网站 -->
+	<bean id="homePageAction" class="com.holley.charging.website.action.HomePageAction" scope="prototype"/>
+	<bean id="mobileAppAction" class="com.holley.charging.website.action.MobileAppAction" scope="prototype"/>
+	<bean id="chargeNetAction" class="com.holley.charging.website.action.ChargeNetAction" scope="prototype"/>
+	<bean id="chargeDeviceAction" class="com.holley.charging.website.action.ChargeDeviceAction" scope="prototype"/>
+	<bean id="newsAction" class="com.holley.charging.website.action.NewsAction" scope="prototype"/>
+	<bean id="aboutUsAction" class="com.holley.charging.website.action.AboutUsAction" scope="prototype"/>
+	<bean id="userLoginAction" class="com.holley.charging.website.action.UserLoginAction" scope="prototype"/>
+	<bean id="userRegisterAction" class="com.holley.charging.website.action.UserRegisterAction" scope="prototype"/>
+	<bean id="pwdResetAction" class="com.holley.charging.website.action.PwdResetAction" scope="prototype"/>
+	
+	<!-- 运营商平台 -->
+
+	<bean id="bussinessAction" class="com.holley.charging.bussiness.action.BussinessAction" scope="prototype"/>
+	<bean id="appointmentAction" class="com.holley.charging.bussiness.action.AppointmentAction" scope="prototype"/>
+	<bean id="accountAction" class="com.holley.charging.bussiness.action.AccountAction" scope="prototype"/>
+	<bean id="authAction" class="com.holley.charging.bussiness.action.AuthAction" scope="prototype"/>
+	<bean id="chargingAction" class="com.holley.charging.bussiness.action.ChargingAction" scope="prototype"/>
+	<bean id="deviceAction" class="com.holley.charging.bussiness.action.DeviceAction" scope="prototype"/>
+	<bean id="monitorAction" class="com.holley.charging.bussiness.action.MonitorAction" scope="prototype"/>
+	<bean id="profitAction" class="com.holley.charging.bussiness.action.ProfitAction" scope="prototype"/>
+	<bean id="alarmEventAction" class="com.holley.charging.bussiness.action.AlarmEventAction" scope="prototype"/>
+		
+	<!-- 个人 ,个人运营商-->
+	<bean id="userAction" class="com.holley.charging.user.action.UserAction" scope="prototype"/>
+	<bean id="userAccountAction" class="com.holley.charging.user.action.UserAccountAction" scope="prototype"/>
+	<bean id="userDeviceAction" class="com.holley.charging.user.action.UserDeviceAction" scope="prototype"/>
+	<bean id="userTransactionAction" class="com.holley.charging.user.action.UserTransactionAction" scope="prototype"/>
+</beans>

@@ -1,0 +1,604 @@
+package com.holley.charging.bms.person.action;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang.math.NumberUtils;
+
+import com.holley.charging.action.BaseAction;
+import com.holley.charging.model.bus.BusCardRecharge;
+import com.holley.charging.model.bus.BusChargeCard;
+import com.holley.charging.model.bus.BusChargeCardExample;
+import com.holley.charging.model.bus.BusPayment;
+import com.holley.charging.model.bus.BusPaymentExample;
+import com.holley.charging.model.bus.BusUser;
+import com.holley.charging.model.bus.BusUserExample;
+import com.holley.charging.model.bus.BusUserInfo;
+import com.holley.charging.model.def.ChargeModel;
+import com.holley.charging.service.bussiness.ChargingService;
+import com.holley.charging.service.website.UserService;
+import com.holley.common.cache.charging.CacheKeyProvide.KeySessionTypeEnum;
+import com.holley.common.cache.charging.ChargingCacheUtil;
+import com.holley.common.constants.Globals;
+import com.holley.common.constants.charge.ChargePayStatusEnum;
+import com.holley.common.constants.charge.UserTypeEnum;
+import com.holley.common.dataobject.Page;
+import com.holley.common.dataobject.WebUser;
+import com.holley.common.util.DateUtil;
+import com.holley.common.util.NumberUtil;
+import com.holley.common.util.StringUtil;
+import com.holley.platform.model.sys.SysCarBrand;
+import com.holley.platform.util.CacheSysHolder;
+import com.holley.platform.util.RoleUtil;
+import com.holley.web.common.util.Validator;
+
+public class CardManagerAction extends BaseAction {
+
+    private UserService         userService;
+    private ChargingService     chargingService;
+    private Page                page;
+    private Map<String, Object> map;
+    private List<SysCarBrand>   modelList;                     // 车辆型号
+    private static String       READ_CARDINFO = "readCardInfo"; // 读卡信息
+    private static String       REGISTER_CARD = "registerCard"; // 开卡
+
+    public String searchCardInfo() {
+        Map<String, Object> map = new HashMap<String, Object>();
+        String msg = "success";
+        String cardNo = getParameter("cardNo");
+        String type = getParameter("type");
+        if (!StringUtil.isEmpty(cardNo) && !StringUtil.isEmpty(type)) {
+            BusChargeCardExample cardEmp = new BusChargeCardExample();
+            BusChargeCardExample.Criteria cardCr = cardEmp.createCriteria();
+            cardCr.andCardNoEqualTo(cardNo);
+            List<BusChargeCard> list = userService.selectChargeCardByExample(cardEmp);
+            if (READ_CARDINFO.equals(type)) {
+                if (list != null && list.size() > 0) {
+                    BusChargeCard cardInfo = list.get(0);
+                    map.put("cardInfo", cardInfo);
+                } else {
+                    msg = "充电卡[" + cardNo + "]还未开卡！！";
+                }
+            } else if (REGISTER_CARD.equals(type)) {
+                if (list != null && list.size() > 0) {
+                    msg = "充电卡[" + cardNo + "]已经开卡,请更换新的充电卡并刷新！！";
+                }
+            }
+
+        } else {
+            msg = "无充电卡信息！！";
+        }
+        map.put("msg", msg);
+        this.map = map;
+        return SUCCESS;
+    }
+
+    /**
+     * 查询充电卡充值记录
+     * 
+     * @return
+     */
+    public String cardRechargeListInit() {
+        return SUCCESS;
+    }
+
+    /**
+     * 查询充电卡充值记录AJAX
+     * 
+     * @return
+     */
+    public String showCardRechargeList() {
+        String keyword = this.getParameter("keyword");
+        int pageindex = getParamInt("pageindex");
+        Map<String, Object> params = new HashMap<String, Object>();
+        if (StringUtil.isNotEmpty(keyword)) {
+            params.put("keyword", StringUtil.trim(keyword));
+        }
+        Page page = this.returnPage(pageindex, limit);
+        params.put(Globals.PAGE, page);
+        List<BusCardRecharge> cardRechargeList = userService.selectCardRechargeByPage(params);
+        page.setRoot(cardRechargeList);
+        this.page = page;
+        return SUCCESS;
+    }
+
+    /**
+     * 清灰色记录
+     * 
+     * @return
+     */
+    public String cleanBadRecord() {
+        String chargeCardNo = getParameter("chargeCardNo");
+        String badChargeId = getParameter("badChargeId");
+        String totalShouldMoney = getParameter("totalShouldMoney");
+        String usableMoney = getParameter("usableMoney");
+        message = checkCleanBadRecord(chargeCardNo, badChargeId, totalShouldMoney, usableMoney);
+        if ("success".equals(message)) {
+            // 批量更新
+        }
+        return SUCCESS;
+    }
+
+    private String checkCleanBadRecord(String chargeCardNo, String badChargeId, String totalShouldMoney, String usableMoney) {
+        String msg = "success";
+        String[] badChargeIds = null;
+        List<Integer> badChargeIdList = null;
+        double totalShouldMoneyd = NumberUtils.toDouble(totalShouldMoney);
+        double usableMoneyd = NumberUtils.toDouble(usableMoney);
+        if (StringUtil.isEmpty(chargeCardNo) || StringUtil.isEmpty(usableMoney)) {
+            msg = "充电卡信息有误！！";
+        } else if (StringUtil.isEmpty(badChargeId)) {
+            msg = "扣款记录有误！！";
+        } else if (StringUtil.isEmpty(totalShouldMoney)) {
+            msg = "扣款金额有误！！";
+        } else if (totalShouldMoneyd > usableMoneyd) {
+            msg = "充电卡可以余额不足！！";
+        }
+
+        if ("success".equals(msg)) {
+            badChargeIds = badChargeId.split(",");
+            badChargeIdList = new ArrayList<Integer>();
+            for (String badId : badChargeIds) {
+                badChargeIdList.add(NumberUtils.toInt(badId));
+            }
+            BusChargeCardExample cardEmp = new BusChargeCardExample();
+            BusChargeCardExample.Criteria cardCr = cardEmp.createCriteria();
+            cardCr.andCardNoEqualTo(chargeCardNo);
+            List<BusChargeCard> list = userService.selectChargeCardByExample(cardEmp);
+
+            BusPaymentExample payEmp = new BusPaymentExample();
+            BusPaymentExample.Criteria payCr = payEmp.createCriteria();
+            payCr.andIdIn(badChargeIdList);
+            List<BusPayment> paymentList = chargingService.selectChargePaymentByExample(payEmp);
+
+            if (list == null || list.size() <= 0) {
+                msg = "无充电卡信息！！";
+            } else if (paymentList == null || paymentList.size() <= 0) {
+                msg = "充电记录不存在！！";
+            } else {
+                for (BusPayment pay : paymentList) {
+                    if (ChargePayStatusEnum.SUCCESS.getShortValue().shortValue() == pay.getPayStatus().shortValue()) {
+                        msg = "订单号:[" + pay.getTradeNo() + "]" + "已经支付！！";
+                        break;
+                    }
+                }
+            }
+        }
+        return msg;
+    }
+
+    /**
+     * 查看灰色记录
+     * 
+     * @return
+     */
+    public String showBadChargeList() {
+        String chargeCardNo = getParameter("chargeCardNo");// 充电卡卡号
+        String badChargeIds = getParameter("badChargeIds");// 灰色充电记录号[XX,XX]形式
+        Map<String, Object> map = checkShowBadCharge(chargeCardNo, badChargeIds);
+        this.map = map;
+        return SUCCESS;
+    }
+
+    private Map<String, Object> checkShowBadCharge(String chargeCardNo, String badChargeIds) {
+        String msg = "success";
+        Map<String, Object> map = new HashMap<String, Object>();
+        if (StringUtil.isEmpty(chargeCardNo)) {
+            msg = "充电卡号为空！！";
+        } else if (StringUtil.isEmpty(badChargeIds)) {
+            msg = "无灰色记录！！";
+        } else {
+            BusChargeCardExample cardEmp = new BusChargeCardExample();
+            BusChargeCardExample.Criteria cardCr = cardEmp.createCriteria();
+            cardCr.andCardNoEqualTo(chargeCardNo);
+            int count = userService.countChargeCardByExample(cardEmp);
+            if (count <= 0) {
+                msg = "该充电卡[" + chargeCardNo + "]不存在或未开卡！！";
+            }
+        }
+        if ("success".equals(msg)) {
+            String[] ids = badChargeIds.split(",");
+            List<Integer> badIds = new ArrayList<Integer>();
+            for (String id : ids) {
+                badIds.add(NumberUtils.toInt(id));
+            }
+            map.put("list", badIds);
+            List<ChargeModel> badChargeList = chargingService.selectBadCardPaymentByMap(map);
+            map.put("badChargeList", badChargeList);
+        }
+        map.put("msg", msg);
+        return map;
+    }
+
+    /**
+     * 修改充电卡密码
+     * 
+     * @return
+     */
+    public String changeCardPwd() {
+        String chargeCardNo = getParameter("chargeCardNo");// 充电卡卡号
+        String newPassword = getParameter("newPassword");// 新密码
+        message = checkChangeCardPwd(chargeCardNo, newPassword);
+        if ("success".equals(message)) {
+            BusChargeCard chargeCard = new BusChargeCard();
+            chargeCard.setPassword(newPassword);
+            BusChargeCardExample cardEmp = new BusChargeCardExample();
+            BusChargeCardExample.Criteria cardCr = cardEmp.createCriteria();
+            cardCr.andCardNoEqualTo(chargeCardNo);
+            userService.updateChargeCardByExampleSelective(chargeCard, cardEmp);
+        }
+        return SUCCESS;
+    }
+
+    private String checkChangeCardPwd(String chargeCardNo, String newPassword) {
+        String msg = "success";
+        if (StringUtil.isEmpty(chargeCardNo)) {
+            msg = "充电卡号为空！！";
+        } else if (StringUtil.isEmpty(newPassword) || newPassword.length() < 6) {
+            msg = "充电卡密码必须大于或等于6位！！";
+        } else {
+            BusChargeCardExample cardEmp = new BusChargeCardExample();
+            BusChargeCardExample.Criteria cardCr = cardEmp.createCriteria();
+            cardCr.andCardNoEqualTo(chargeCardNo);
+            int count = userService.countChargeCardByExample(cardEmp);
+            if (count <= 0) {
+                msg = "该充电卡[" + chargeCardNo + "]不存在或未开卡！！";
+            }
+        }
+        return msg;
+    }
+
+    /**
+     * 充电卡充值
+     * 
+     * @return
+     */
+    public String cardRecharge() {
+        String chargeCardNo = getParameter("chargeCardNo");// 充电卡卡号
+        String rechargeMoney = getParameter("rechargeMoney");// 充值金额
+        message = checkCardRecharge(chargeCardNo, rechargeMoney);
+        if ("success".equals(message)) {
+            BusChargeCardExample cardEmp = new BusChargeCardExample();
+            BusChargeCardExample.Criteria cardCr = cardEmp.createCriteria();
+            cardCr.andCardNoEqualTo(chargeCardNo);
+            List<BusChargeCard> cardList = userService.selectChargeCardByExample(cardEmp);
+            BusChargeCard card = cardList.get(0);
+            BusCardRecharge cardRecharge = new BusCardRecharge();
+            cardRecharge.setAddIp(getRemoteIP());
+            cardRecharge.setAddTime(new Date());
+            cardRecharge.setCardInfoId(card.getId());
+            cardRecharge.setMoney(new BigDecimal(rechargeMoney));
+            cardRecharge.setTradeNo(DateUtil.DateToLong14Str(new Date()) + StringUtil.AddjustLength(card.getUserId().toString(), 6, "0"));
+            cardRecharge.setWorker(NumberUtils.toInt(getSessionBmsUserId()));
+            // 更新充电卡余额信息
+            BusChargeCard updateChargeCard = new BusChargeCard();
+            updateChargeCard.setId(card.getId());
+            updateChargeCard.setUsableMoney(NumberUtil.add(card.getUsableMoney(), cardRecharge.getMoney()));
+            updateChargeCard.setFreezeMoney(card.getFreezeMoney());
+            updateChargeCard.setUpdateTime(new Date());
+            updateChargeCard.setUserId(card.getUserId());
+            userService.insertAndUpdateCardRecharge(cardRecharge, updateChargeCard);
+        }
+        return SUCCESS;
+    }
+
+    private String checkCardRecharge(String chargeCardNo, String rechargeMoney) {
+        String msg = "success";
+        double rechargeMoneyd = NumberUtils.toDouble(rechargeMoney);
+        if (StringUtil.isEmpty(chargeCardNo)) {
+            msg = "充电卡有误！！";
+        } else if (rechargeMoneyd <= 0) {
+            msg = "充值金额有误！！";
+        } else {
+            BusChargeCardExample cardEmp = new BusChargeCardExample();
+            BusChargeCardExample.Criteria cardCr = cardEmp.createCriteria();
+            cardCr.andCardNoEqualTo(chargeCardNo);
+            int count = userService.countChargeCardByExample(cardEmp);
+            if (count <= 0) {
+                msg = "该充电卡[" + chargeCardNo + "]不存在或未开卡！！";
+            }
+        }
+        return msg;
+    }
+
+    /**
+     * 充电卡信息初始化
+     * 
+     * @return
+     */
+    public String cardInfoInit() {
+        getRequest().setAttribute("currentTime", DateUtil.DateToLong14Str(new Date()));
+        return SUCCESS;
+    }
+
+    /**
+     * 进入充电卡业务办理
+     * 
+     * @return
+     */
+    public String cardManagerInit() {
+        int maxChargeCard = NumberUtils.toInt(RoleUtil.selectRuleByPrimaryKey(RoleUtil.MAX_CHARGECARD_LIMIT));
+        maxChargeCard = maxChargeCard > 0 ? maxChargeCard : Globals.MAX_CHAEGECARD_LIMIT;
+        getRequest().setAttribute("maxChargeCard", maxChargeCard);
+        return SUCCESS;
+    }
+
+    public String userInfoList() {
+        String keyword = this.getParameter("keyword");
+        int pageindex = getParamInt("pageindex");
+        Map<String, Object> params = new HashMap<String, Object>();
+        if (StringUtil.isNotEmpty(keyword)) {
+            params.put("keyword", StringUtil.trim(keyword));
+        }
+        Page page = this.returnPage(pageindex, limit);
+        params.put(Globals.PAGE, page);
+        List<BusUserInfo> cardInfoList = userService.selectUserInfoForCardByPage(params);
+        page.setRoot(cardInfoList);
+        this.page = page;
+        return SUCCESS;
+    }
+
+    /**
+     * 开户初始化
+     * 
+     * @return
+     */
+    public String registerUserInit() {
+        getRequest().setAttribute("provinceList", CacheSysHolder.getProvinceList());
+        getRequest().setAttribute("carBrandList", CacheSysHolder.getCarBrandList());
+        return SUCCESS;
+    }
+
+    /**
+     * 开户
+     * 
+     * @return
+     */
+    public String doRegisterUser() {
+        String userObjStr = getParameter("userObjStr");
+        Map<String, Object> map = checkCarAndCard(userObjStr);
+        if ("success".equals(map.get("msg"))) {
+            BusUser user = (BusUser) map.get("userObj");
+            BusUserInfo userInfo = (BusUserInfo) map.get("userInfoObj");
+            BusUserExample userEmp = new BusUserExample();
+            BusUserExample.Criteria userCr = userEmp.createCriteria();
+            userCr.andPhoneEqualTo(user.getPhone());
+            userCr.andUserTypeEqualTo(UserTypeEnum.PERSON.getShortValue());
+            List<BusUser> userList = userService.selectUserByExample(userEmp);
+            if (userList != null && userList.size() > 0) {
+                map.put("msg", "该手机号码已被注册！！");
+            } else {
+                try {
+                    int userInfoId = userService.insertCardUser(user, userInfo);
+                    map.put("newInfoId", userInfoId);
+                } catch (Exception e) {
+                    map.put("msg", "开户失败！！");
+                }
+            }
+        }
+        this.map = map;
+        return SUCCESS;
+    }
+
+    /**
+     * 请求车型号
+     * 
+     * @return
+     */
+    public String requestCarModel() {
+        int brand = this.getParamInt("brand");
+        if (brand > 0) {
+            modelList = CacheSysHolder.getCarModelListByPid(brand);
+        }
+        return SUCCESS;
+    }
+
+    /**
+     * 开卡初始化
+     * 
+     * @return
+     */
+    public String registerCardInit() {
+        WebUser bmsUser = ChargingCacheUtil.getSession(getSessionBmsUserId(), KeySessionTypeEnum.BMS, null);
+        int infoId = getParamInt("infoId");
+        if (infoId > 0) {
+            Map<String, Object> param = new HashMap<String, Object>();
+            param.put("infoId", infoId);
+            param.put("userType", UserTypeEnum.PERSON.getShortValue());
+            List<BusUser> list = userService.selectBusUserByMap(param);
+            if (list != null && list.size() > 0) {
+                BusUser user = list.get(0);
+                BusUserInfo userInfo = userService.selectUserInfoByPrimaryKey(user.getInfoId());
+                getRequest().setAttribute("user", user);// 开卡用户
+                getRequest().setAttribute("userInfo", userInfo);// 开卡用户信息
+                getRequest().setAttribute("worker", bmsUser);// 操作员用户
+                getRequest().setAttribute("password", Globals.DEFAULT_PASSWORD);// 默认充电卡开卡密码可修改
+                getRequest().setAttribute("worker", bmsUser);// 操作员用户
+                getRequest().setAttribute("currentTime", DateUtil.DateToLong14Str(new Date()));
+            } else {
+                return MEMBER;
+            }
+        } else {
+            return MEMBER;
+        }
+        return SUCCESS;
+    }
+
+    /**
+     * 开卡
+     * 
+     * @return
+     */
+    public String doRegisterCard() {
+        String cardObjStr = getParameter("cardObjStr");
+        map = checkCardInfo(cardObjStr);
+        if ("success".equals(map.get("msg"))) {
+            BusChargeCard chargeCard = (BusChargeCard) map.get("cardInfoObj");
+            chargeCard.setUpdateTime(new Date());
+            int newCardId = userService.insertChargeCardSelective(chargeCard);
+            map.put("newCardId", newCardId);
+        }
+        return SUCCESS;
+    }
+
+    private Map<String, Object> checkCardInfo(String cardInfoStr) {
+        Map<String, Object> map = new HashMap<String, Object>();
+        String msg = "success";
+        BusChargeCard cardInfoObj = null;
+        try {
+            cardInfoObj = JsonToBean(cardInfoStr, BusChargeCard.class);
+            Date startTime = cardInfoObj.getStartTime();
+            Date endTime = cardInfoObj.getEndTime();
+            if (cardInfoObj.getUserId() == null || cardInfoObj.getUserId() <= 0) {
+                msg = "非法操作！！";
+            } else if (StringUtil.isEmpty(cardInfoObj.getBusNo())) {
+                msg = "发卡运营商编号不能为空！！";
+            } else if (StringUtil.isEmpty(cardInfoObj.getCardNo())) {
+                msg = "充电卡卡号不能为空！！";
+            } else if (cardInfoObj.getApplicationType() <= 0) {
+                msg = "请选择应用类型标识！！";
+            } else if (cardInfoObj.getCardType() <= 0) {
+                msg = "请选择卡类型标识！！";
+            } else if (StringUtil.isEmpty(cardInfoObj.getPassword())) {
+                msg = "充电卡密码不能为空！！";
+            } else if (startTime == null) {
+                msg = "请选择充点卡启用日期！！";
+            } else if (cardInfoObj.getWorker() <= 0) {
+                msg = "职工标识不能为空！！";
+            } else if (endTime == null) {
+                msg = "请选择充点卡有效日期！！";
+            } else if (startTime.getTime() >= endTime.getTime()) {
+                msg = "充电卡有效日期必须大于启用日期！！";
+            }
+            if ("success".equals(msg)) {
+                // 卡数量上限判断
+                BusChargeCardExample cardEmp = new BusChargeCardExample();
+                BusChargeCardExample.Criteria cardCr = cardEmp.createCriteria();
+                cardCr.andUserIdEqualTo(cardInfoObj.getUserId());
+                int countCard = userService.countChargeCardByExample(cardEmp);
+                int maxChargeCard = NumberUtils.toInt(RoleUtil.selectRuleByPrimaryKey(RoleUtil.MAX_CHARGECARD_LIMIT));
+                maxChargeCard = maxChargeCard > 0 ? maxChargeCard : Globals.MAX_CHAEGECARD_LIMIT;
+                // 卡号重复判断
+                BusChargeCardExample cardEmp2 = new BusChargeCardExample();
+                BusChargeCardExample.Criteria cardCr2 = cardEmp2.createCriteria();
+                cardCr2.andCardNoEqualTo(cardInfoObj.getCardNo());
+                int countCard2 = userService.countChargeCardByExample(cardEmp2);
+
+                if (countCard >= maxChargeCard) {
+                    msg = "添加充电卡数量已达上限！！";
+                } else if (countCard2 > 0) {
+                    msg = "充电卡[" + cardInfoObj.getCardNo() + "]已经开卡，请更换新的充电卡！！";
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            msg = "开卡失败！！";
+        }
+        if ("success".equals(msg)) {
+            map.put("cardInfoObj", cardInfoObj);
+        }
+        map.put("msg", msg);
+        return map;
+    }
+
+    /**
+     * 用户充电卡列表
+     * 
+     * @return
+     */
+    public String showCardList() {
+        int infoId = getParamInt("infoId");
+        Map<String, Object> resultMap = new HashMap<String, Object>();
+        String msg = "success";
+        if (infoId > 0) {
+            Map<String, Object> param = new HashMap<String, Object>();
+            param.put("infoId", infoId);
+            param.put("userType", UserTypeEnum.PERSON.getShortValue());
+            List<BusUser> list = userService.selectBusUserByMap(param);
+            if (list != null && list.size() > 0) {
+                BusUser user = list.get(0);
+                BusChargeCardExample cardEmp = new BusChargeCardExample();
+                BusChargeCardExample.Criteria cardCr = cardEmp.createCriteria();
+                cardCr.andUserIdEqualTo(user.getId());
+                List<BusChargeCard> cardList = userService.selectChargeCardByExample(cardEmp);
+                resultMap.put("cardList", cardList);
+            } else {
+                msg = "请选择用户！！";
+            }
+        } else {
+            msg = "请选择用户！！";
+        }
+        resultMap.put("msg", msg);
+        map = resultMap;
+        return SUCCESS;
+    }
+
+    // 检查车辆信息和用户信息
+    private Map<String, Object> checkCarAndCard(String userObjStr) {
+        Map<String, Object> map = new HashMap<String, Object>();
+        String msg = "success";
+        try {
+            BusUserInfo userInfo = JsonToBean(userObjStr, BusUserInfo.class);
+            BusUser user = JsonToBean(userObjStr, BusUser.class);
+            if (!Validator.isChinese(userInfo.getRealName())) {
+                msg = "请输入正确的姓名！！";
+            } else if (!Validator.isMobile(user.getPhone())) {
+                msg = "请输入正确的11位手机号码！！";
+            } else if (userInfo.getProvince() <= 0) {
+                msg = "请选择省份！！";
+            } else if (userInfo.getCity() <= 0) {
+                msg = "请选择市区！！";
+            } else if (!Validator.isEmail(user.getEmail())) {
+                msg = "请输入正确的邮箱！！";
+            } else if (!Validator.isIDCard(userInfo.getCardNo())) {
+                msg = "请输入正确的身份证号码！！";
+            } else if (StringUtil.isEmpty(userInfo.getPlateNo())) {
+                msg = "请输入车牌号！！";
+            } else if (userInfo.getBrand() <= 0) {
+                msg = "请选择车品牌！！";
+            } else if (userInfo.getModel() <= 0) {
+                msg = "请选择车型号！！";
+            } else if (StringUtil.isEmpty(userInfo.getVin())) {
+                msg = "请输入车架号！！";
+            }
+            if ("success".equals(msg)) {
+                map.put("userObj", user);
+                map.put("userInfoObj", userInfo);
+            }
+        } catch (Exception e) {
+            msg = "开户失败！！";
+        }
+        map.put("msg", msg);
+        return map;
+    }
+
+    // set get
+
+    public void setUserService(UserService userService) {
+        this.userService = userService;
+    }
+
+    public Page getPage() {
+        return page;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public Map<String, Object> getMap() {
+        return map;
+    }
+
+    public List<SysCarBrand> getModelList() {
+        return modelList;
+    }
+
+    public void setChargingService(ChargingService chargingService) {
+        this.chargingService = chargingService;
+    }
+}

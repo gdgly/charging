@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.holley.charging.dcs.dao.mapper.DcsHisYcMapper" >
+  <resultMap id="BaseResultMap" type="com.holley.charging.dcs.dao.model.DcsHisYc" >
+    <id column="ID" property="id" jdbcType="INTEGER" />
+    <result column="CHARGEID" property="chargeId" jdbcType="INTEGER" />
+    <result column="DATATYPE" property="dataType" jdbcType="INTEGER" />
+    <result column="DATATIME" property="dataTime" jdbcType="TIMESTAMP" />
+    <result column="VALUE" property="value" jdbcType="DOUBLE" />
+  </resultMap>
+ 
+  <sql id="Base_Column_List" >
+    ID, CHARGEID, DATATYPE, DATATIME, VALUE
+  </sql>
+ 
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from DCS_HISYC
+    where ID = #{id,jdbcType=INTEGER}
+  </select>
+
+  <insert id="insert" parameterType="com.holley.charging.dcs.dao.model.DcsHisYc" >
+    insert into DCS_HISYC ( ID, CHARGEID, DATATYPE, DATATIME, VALUE
+      )
+    values (#{id,jdbcType=INTEGER}, #{chargeId,jdbcType=INTEGER}, #{dataType,jdbcType=INTEGER}, 
+     #{dataTime,jdbcType=TIMESTAMP},#{value,jdbcType=DOUBLE}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.holley.charging.dcs.dao.model.DcsHisYc" >
+    insert into DCS_HISYC
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        ID,
+      </if>
+      <if test="chargeId != null" >
+        CHARGEID,
+      </if>
+      <if test="dataType != null" >
+        DATATYPE,
+      </if>
+      <if test="dataTime != null" >
+        DATATIME,
+      </if>
+      <if test="value != null" >
+        VALUE,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="chargeId != null" >
+        #{chargeId,jdbcType=INTEGER},
+      </if>
+      <if test="dataType != null" >
+        #{dataType,jdbcType=INTEGER},
+      </if>
+      <if test="dataTime != null" >
+        #{dataTime,jdbcType=SMALLINT},
+      </if>
+      <if test="value != null" >
+        #{value,jdbcType=DOUBLE},
+      </if>
+    </trim>
+  </insert>
+
+ 
+
+  <update id="updateByPrimaryKeySelective" parameterType="com.holley.charging.dcs.dao.model.AlarmEvents" >
+    update dcs_alarm_events
+    <set >
+      <if test="pileId != null" >
+        PILE_ID = #{pileId,jdbcType=INTEGER},
+      </if>
+      <if test="eventId != null" >
+        EVENT_ID = #{eventId,jdbcType=CHAR},
+      </if>
+      <if test="described != null" >
+        DESCRIBED = #{described,jdbcType=VARCHAR},
+      </if>
+      <if test="level != null" >
+        LEVEL = #{level,jdbcType=SMALLINT},
+      </if>
+      <if test="eventTime != null" >
+        EVENT_TIME = #{eventTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.holley.charging.dcs.dao.model.AlarmEvents" >
+    update dcs_alarm_events
+    set PILE_ID = #{pileId,jdbcType=INTEGER},
+      EVENT_ID = #{eventId,jdbcType=CHAR},
+      DESCRIBED = #{described,jdbcType=VARCHAR},
+      LEVEL = #{level,jdbcType=SMALLINT},
+      EVENT_TIME = #{eventTime,jdbcType=TIMESTAMP}
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

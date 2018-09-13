@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:flex="http://www.springframework.org/schema/flex"
+	xsi:schemaLocation="       
+      http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd       
+      http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd       
+      http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-3.0.xsd       
+      http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd       
+      http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+      http://www.springframework.org/schema/flex http://www.springframework.org/schema/flex/spring-flex-1.5.xsd"
+	default-autowire="byName">
+	<context:annotation-config />
+	<bean id="pobPileMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="com.holley.charging.dcs.dao.mapper.PobPileMapper" />
+	</bean>
+	<bean id="chargeRecordMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="com.holley.charging.dcs.dao.mapper.ChargeRecordMapper" />
+	</bean>
+	<bean id="alarmEventsMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="com.holley.charging.dcs.dao.mapper.AlarmEventsMapper" />
+	</bean>
+	<bean id="dcsBaseDataTypeMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="com.holley.charging.dcs.dao.mapper.DcsBaseDataTypeMapper" />
+	</bean>
+	<bean id="dcsHisYcMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="com.holley.charging.dcs.dao.mapper.DcsHisYcMapper" />
+	</bean>
+	<bean id="dcsHisYxMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="com.holley.charging.dcs.dao.mapper.DcsHisYxMapper" />
+	</bean>
+	<bean id="dcsHisYaMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="com.holley.charging.dcs.dao.mapper.DcsHisYaMapper" />
+	</bean>
+	<bean id="feeModelMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="com.holley.charging.dcs.dao.mapper.FeeModelMapper" />
+	</bean>
+	<bean id="pileFeeModelMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="com.holley.charging.dcs.dao.mapper.PileFeeModelMapper" />
+	</bean>
+	<bean id="payMentRecMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="com.holley.charging.dcs.dao.mapper.PayMentRecMapper" />
+	</bean>
+	<bean id="userMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="com.holley.charging.dcs.dao.mapper.UserMapper" />
+	</bean>
+	<bean id="appointmentRecMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="com.holley.charging.dcs.dao.mapper.AppointmentRecMapper" />
+	</bean>
+	<bean id="accountMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="com.holley.charging.dcs.dao.mapper.AccountMapper" />
+	</bean>
+</beans>

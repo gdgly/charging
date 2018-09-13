@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC  
+    "-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"  
+    "http://struts.apache.org/dtds/struts-2.3.dtd">  
+<struts>
+	<!--登陆与注册 -->
+	<package name="user" namespace="/user" extends="struts-base">
+		<default-interceptor-ref name="mydefault"></default-interceptor-ref>
+		<!-- 跳转页面 -->
+		<action name="register" class="registerAction" method="init">
+			<result name="success">/jsp/frame/register.jsp</result>
+		</action>
+		<action name="login" class="loginAction" method="init">
+			<result name="success">/jsp/frame/login.jsp</result>
+			<result name="member" type="redirectAction">
+				<param name="namespace">/device</param>
+				<param name="actionName">stationList</param>
+			</result>
+		</action>	
+		<action name="logout" class="loginAction" method="loginOut">
+			<result name="success" type="chain">
+				<param name="namespace">/user</param>
+				<param name="actionName">login</param>
+			</result>
+		</action>
+		<action name="pwdreset" class="pwdResetAction" method="init">
+			<result name="success">/jsp/frame/pwdReset.jsp</result>
+		</action>
+		<!-- 请求验证码 -->
+		<action name="changecode" class="imageCodeAction" method="createCode">
+			<result name="success" type="stream">
+				<param name="inputName">imageStream</param>
+				<param name="bufferSize">4096</param>
+			</result>
+		</action>
+		
+		
+		<!-- <action name="alipay" class="payAction" method="alipay">
+		</action>
+		<action name="payInit" class="payAction" method="payInit">
+			<result name="success">/jsp/pay/payInit.jsp</result>
+		</action>
+		<action name="alipayReturn" class="payAction" method="alipayReturn">
+			<result name="success">/jsp/common/msg.jsp</result>
+		</action> -->
+	</package>
+	<package name="user_json" namespace="/user" extends="json-default">
+		<action name="register_*" class="registerAction" method="{1}">
+			<result type="json" />
+		</action>
+		<action name="login_*" class="loginAction" method="{1}">
+			<result type="json" />
+		</action>
+		<action name="pwdreset_*" class="pwdResetAction" method="{1}">
+			<result type="json" />
+		</action>
+	<!-- 	<action name="pay_*" class="payAction" method="{1}">
+			<result type="json" />
+		</action> -->
+	</package>
+</struts>

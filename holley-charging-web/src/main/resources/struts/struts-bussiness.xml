@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC  
+    "-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"  
+    "http://struts.apache.org/dtds/struts-2.3.dtd">
+<struts>
+	<package name="bussiness" namespace="/bussiness" extends="struts-base">
+		<default-interceptor-ref name="sessiondefault"></default-interceptor-ref>
+		<!-- 实名认证信息填写 -->
+		<action name="realNameInfo" class="bussinessAction" method="realNameInfo">
+			<result name="success">/jsp/bussiness/account/realNameInfo.jsp</result>
+			<result name="member" type="redirectAction">safeInfo</result>
+		</action>
+		<!-- 实名认证信息 -->
+		<action name="realName" class="bussinessAction" method="realName">
+			<result name="success">/jsp/bussiness/account/realName.jsp</result>
+			<result name="member" type="redirectAction">safeInfo</result>
+		</action>
+    	<!-- 获取账户安全信息 -->
+		<action name="safeInfo" class="bussinessAction" method="safeInfo">
+			<result name="success">/jsp/bussiness/account/safeInfo.jsp</result>
+		</action>
+		<!-- 验证打款金额 -->
+		<action name="validRealNameInfo" class="bussinessAction" method="validRealNameInfo">
+			<result name="success">/jsp/bussiness/account/validRealNameInfo.jsp</result>
+			<result name="member" type="redirectAction">safeInfo</result>
+		</action>
+
+   		<!-- 获取账户基本信息 -->
+		<action name="baseInfo" class="bussinessAction" method="baseInfo">
+			<result name="success">/jsp/bussiness/account/baseInfo.jsp</result>
+		</action>
+		<!-- 修改登录密码验证页：登录密码-->
+		<action name="validChangePwd" class="bussinessAction" method="validChangePwd">
+			<result name="success">/jsp/bussiness/account/validUserInfo.jsp</result>
+		</action>
+		<!-- 修改登录密码验证页：交易密码-->
+		<action name="validChangePayPwd" class="bussinessAction" method="validChangePayPwd">
+			<result name="success">/jsp/bussiness/account/validUserInfo.jsp</result>
+		</action>
+		<!-- 修改登录密码或交易密码页-->
+		<action name="changePwd" class="bussinessAction" method="changePwd">
+			<result name="success">/jsp/bussiness/account/changePwd.jsp</result>
+			<result name="member" type="redirectAction">safeInfo</result>
+		</action>
+		<!-- 修改邮箱页-->
+		<action name="changeEmail" class="bussinessAction" method="changeEmail">
+			<result name="success">/jsp/bussiness/account/changeEmail.jsp</result>
+			<result name="member" type="redirectAction">safeInfo</result>
+		</action>
+		<!-- 修改手机页-->
+		<action name="changePhone" class="bussinessAction" method="changePhone">
+			<result name="success">/jsp/bussiness/account/changePhone.jsp</result>
+			<result name="member" type="redirectAction">safeInfo</result>
+		</action>
+	
+		<!-- 修改登录密码验证页：交易密码-->
+		<action name="validChangeEmail" class="bussinessAction" method="validChangeEmail">
+			<result name="success">/jsp/bussiness/account/validUserInfo.jsp</result>
+		</action>
+		<!-- 修改手机验证页-->
+		<action name="validChangePhone" class="bussinessAction" method="validChangePhone">
+			<result name="success">/jsp/bussiness/account/validUserInfo.jsp</result>
+		</action>
+		<!-- 查询子账户页-->
+		<action name="searchSubAccount" class="bussinessAction" method="searchSubAccount">
+		<interceptor-ref name="addCheckRuleStack"></interceptor-ref>
+			<result name="success">/jsp/bussiness/account/subAccounts.jsp</result>
+		</action>
+		<!-- 查询信息页-->
+		<action name="searchMsg" class="bussinessAction" method="searchMsg">
+			<result name="success">/jsp/bussiness/account/searchMsg.jsp</result>
+		</action>
+	</package>
+	<!-- 预约 -->
+	<package name="appointment" namespace="/appointment" extends="struts-base">
+   		<default-interceptor-ref name="addCheckRuleStack"></default-interceptor-ref>
+    	<!-- 预约列表信息-->
+		<action name="searchAppointments" class="appointmentAction" method="searchAppointments">
+			<result name="success">/jsp/bussiness/transaction/appointments.jsp</result>
+		</action>
+	</package>
+	<!-- 充电 -->
+	<package name="charging" namespace="/charging" extends="struts-base">
+   		<default-interceptor-ref name="addCheckRuleStack"></default-interceptor-ref>
+    	<!-- 预约列表信息-->
+		<action name="searchCharges" class="chargingAction" method="searchCharges">
+			<result name="success">/jsp/bussiness/transaction/charges.jsp</result>
+		</action>
+	</package>
+	<!-- 账户 -->
+	<package name="account" namespace="/account" extends="struts-base">
+   		<default-interceptor-ref name="sessiondefault"></default-interceptor-ref>
+    	<!-- 预约列表信息-->
+		<action name="accountInfo" class="accountAction" method="accountInfo">
+			<result name="success">/jsp/bussiness/account/accountInfo.jsp</result>
+		</action>
+		
+	    <action name="accountCash" class="accountAction" method="accountCash">
+	    <interceptor-ref name="addCheckRuleStack"></interceptor-ref>
+			<result name="success">/jsp/bussiness/transaction/accountCash.jsp</result>
+		</action>
+		<action name="searchAccountCashs" class="accountAction" method="searchAccountCashs">
+			<result name="success">/jsp/bussiness/transaction/accountCashs.jsp</result>
+		</action>
+		<action name="showBills" class="accountAction" method="showBills">
+			<result name="success">/jsp/bussiness/transaction/showBills.jsp</result>
+		</action>
+		
+	</package>
+	<!-- 收益分析-->
+	<package name="profit" namespace="/profit" extends="struts-base">
+   		<default-interceptor-ref name="addCheckRuleStack"></default-interceptor-ref>
+    	<!-- 预约列表信息-->
+		<action name="profitAnalysis" class="profitAction" method="profitAnalysis">
+			<result name="success">/jsp/bussiness/transaction/profit.jsp</result>
+		</action>
+	</package>
+	<!-- 运行监控-->
+	<package name="monitor" namespace="/monitor" extends="struts-base">
+   		<default-interceptor-ref name="sessiondefault"></default-interceptor-ref>
+    	<!--运行监控主页-->
+		<action name="monitorMap" class="monitorAction" method="monitorMap">
+			<result name="success">/jsp/bussiness/monitor/monitorMap.jsp</result>
+		</action>
+		<!--查询所有设备实时状态-->
+		<action name="searchAllOnlinePileList" class="monitorAction" method="searchAllOnlinePileList">
+			<result name="success">/jsp/bussiness/monitor/searchAllOnlinePile.jsp</result>
+		</action>
+		
+	</package>
+	<!-- 设备管理-->
+	<package name="deviceManager" namespace="/deviceManager" extends="struts-base">
+   		<default-interceptor-ref name="addCheckRuleStack"></default-interceptor-ref>
+    	<!--正式设备列表页-->
+		<action name="searchValidDevice" class="deviceAction" method="searchValidDevice">
+			<result name="success">/jsp/bussiness/device/validDevice.jsp</result>
+		</action>
+		
+		<!--未审核充点电列表页-->
+		<action name="searchUnValidDevice" class="deviceAction" method="searchUnValidDevice">
+			<result name="success">/jsp/bussiness/device/unValidDevice.jsp</result>
+		</action>
+
+		<!--新增充电点页-->
+		<action name="addStation" class="deviceAction" method="addStation">
+			<result name="success">/jsp/bussiness/device/addStation.jsp</result>
+		</action>
+		
+		<!--未审核充电点新增充电桩页-->
+		<action name="addNewStationPile" class="deviceAction" method="addNewStationPile">
+			<result name="success">/jsp/bussiness/device/addPile.jsp</result>
+			<result name="member" type="redirectAction">searchStations</result>
+		</action>
+					
+		<!--已审核充电点新增充电桩页-->
+		<action name="addValidStationPile" class="deviceAction" method="addValidStationPile">
+			<result name="success">/jsp/bussiness/device/addPile.jsp</result>
+			<result name="member" type="redirectAction">searchStations</result>
+		</action>
+		
+		<!--修改已审核充电点信息-->
+		<action name="editValidStation" class="deviceAction" method="editValidStation">
+			<result name="success">/jsp/bussiness/device/editStation.jsp</result>
+			<result name="member" type="redirectAction">searchStations</result>
+		</action>
+		<!--修改待审核充电点信息-->
+		<action name="editNewStation" class="deviceAction" method="editNewStation">
+			<result name="success">/jsp/bussiness/device/editStation.jsp</result>
+			<result name="member" type="redirectAction">searchUnValidStations</result>
+		</action>
+		<!--修改已审核充电桩息-->
+		<action name="editValidPile" class="deviceAction" method="editValidPile">
+			<result name="success">/jsp/bussiness/device/editPile.jsp</result>
+			<result name="member" type="redirectAction">searchStations</result>
+		</action>
+		<!--修改未审核充电桩息-->
+		<action name="editNewPile" class="deviceAction" method="editNewPile">
+			<result name="success">/jsp/bussiness/device/editPile.jsp</result>
+			<result name="member" type="redirectAction">searchUnValidPiles</result>
+		</action>
+		<!--预览DOC-->
+		<action name="readDocForHtml" class="deviceAction" method="readDocForHtml">
+			<result name="success"></result>
+		</action>
+		<!--显示已审核设备详情-->
+		<action name="showValidDetail" class="deviceAction" method="showValidDetail">
+			<result name="station">/jsp/bussiness/device/detailStation.jsp</result>
+			<result name="pile">/jsp/bussiness/device/detailPile.jsp</result>
+		</action>
+		<!--显示未审核设备详情-->
+		<action name="showUnValidDetail" class="deviceAction" method="showUnValidDetail">
+			<result name="station">/jsp/bussiness/device/detailStation.jsp</result>
+			<result name="pile">/jsp/bussiness/device/detailPile.jsp</result>
+		</action>
+	</package>
+	<!-- 告警事件-->
+	<package name="alarmEvent" namespace="/alarmEvent" extends="struts-base">
+   		<default-interceptor-ref name="addCheckRuleStack"></default-interceptor-ref>
+    	<!--事件列表页-->
+		<action name="searchEvents" class="alarmEventAction" method="searchEvents">
+			<result name="success">/jsp/bussiness/device/alarmEvents.jsp</result>
+		</action>
+	</package>
+	<!-- json -->
+	<package name="json" namespace="/" extends="json-base">
+		<action name="bussiness_*" class="bussinessAction" method="{1}">
+			<result type="json" name="success" />
+		</action>
+		<action name="appointment_*" class="appointmentAction" method="{1}">
+			<result type="json" name="success" />
+		</action>
+		<action name="account_*" class="accountAction" method="{1}">
+			<result type="json" name="success" />
+		</action>
+		<action name="profit_*" class="profitAction" method="{1}">
+			<result type="json" name="success" />
+		</action>
+		<action name="charging_*" class="chargingAction" method="{1}">
+			<result type="json" name="success" />
+		</action>
+		<action name="event_*" class="alarmEventAction" method="{1}">
+			<result type="json" name="success" />
+		</action>
+		<action name="device_*" class="deviceAction" method="{1}">
+			<result type="json" name="success" />
+		</action>
+		<action name="monitor_*" class="monitorAction" method="{1}">
+			<result type="json" name="success" />
+		</action>
+	</package>
+</struts>

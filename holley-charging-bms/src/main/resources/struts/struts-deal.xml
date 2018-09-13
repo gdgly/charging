@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC  
+    "-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"  
+    "http://struts.apache.org/dtds/struts-2.3.dtd">   
+<struts>
+	<!--交易管理 --> 
+	<package name="deal" namespace="/deal" extends="struts-base">
+		<!-- 账户(钱包)查询 -->
+		<action name="accountList" class="accountAction" method="init">
+			<result name="success">/jsp/deal/accountList.jsp</result>
+		</action>
+		<action name="manualRechargeInit" class="accountAction" method="manualRechargeInit">
+			<result name="success">/jsp/deal/manualRecharge.jsp</result>
+		</action>
+		<!-- 预约记录 -->
+		<action name="appointmentList" class="appointmentAction" method="init">
+			<result name="success">/jsp/deal/appointmentList.jsp</result>
+		</action>
+		<action name="appointmentDetailInit" class="appointmentAction" method="detailInit">
+			<result name="success">/jsp/deal/appointmentDetail.jsp</result>
+		</action>
+		<!-- 充电记录 -->
+		<action name="chargeList" class="chargeAction" method="init">
+			<result name="success">/jsp/deal/chargeList.jsp</result>
+		</action>
+		<action name="chargeDetailInit" class="chargeAction" method="detailInit">
+			<result name="success">/jsp/deal/chargeDetail.jsp</result>
+		</action>
+		<!-- 充值记录 -->
+		<action name="rechargeList" class="rechargeAction" method="init">
+			<result name="success">/jsp/deal/rechargeList.jsp</result>
+		</action>
+		<action name="rechargeDetailInit" class="rechargeAction" method="detailInit">
+			<result name="success">/jsp/deal/rechargeDetail.jsp</result>
+		</action>
+		<!-- 资金日志 -->
+		<action name="accountLogList" class="accountLogAction" method="init">
+			<result name="success">/jsp/deal/accountLogList.jsp</result>
+		</action>
+		<!-- 结算账单 -->
+		<action name="billsList" class="billsAction" method="init">
+			<result name="success">/jsp/deal/billsList.jsp</result>
+		</action>
+		<action name="billsDetail" class="billsAction" method="detailInit">
+			<result name="success">/jsp/deal/billsDetail.jsp</result>
+		</action>
+		<!--提现审核 -->
+		<action name="cashVerifyList" class="cashVerifyAction" method="init">
+			<result name="success">/jsp/deal/cashVerifyList.jsp</result>
+		</action>
+		<action name="cashVerify" class="cashVerifyAction" method="cashVerifyInit">
+			<result name="success">/jsp/deal/cashVerify.jsp</result>
+		</action>
+		<action name="cashVerifyDetail" class="cashVerifyAction" method="cashVerifyDetailInit">
+			<result name="success">/jsp/deal/cashVerifyDetail.jsp</result>
+		</action>
+		<!--提现转账(线下) -->
+		<action name="cashTransferList" class="cashTransferAction" method="init">
+			<result name="success">/jsp/deal/cashTransferList.jsp</result>
+		</action>
+		<action name="cashTransfer" class="cashTransferAction" method="cashTransferInit">
+			<result name="success">/jsp/deal/cashTransfer.jsp</result>
+		</action>
+		<action name="cashTransferDetail" class="cashTransferAction" method="cashTransferDetailInit">
+			<result name="success">/jsp/deal/cashTransferDetail.jsp</result>
+		</action>
+		
+	</package>
+	<package name="deal_json" namespace="/deal" extends="json-base">
+		<action name="account_*" class="accountAction" method="{1}">
+			<result type="json" />
+		</action>
+		<action name="appointment_*" class="appointmentAction" method="{1}">
+			<result type="json" />
+		</action>
+		<action name="charge_*" class="chargeAction" method="{1}">
+			<result type="json" />
+		</action>
+		<action name="recharge_*" class="rechargeAction" method="{1}">
+			<result type="json" />
+		</action>
+		<action name="accountLog_*" class="accountLogAction" method="{1}">
+			<result type="json" />
+		</action>
+		<action name="bills_*" class="billsAction" method="{1}">
+			<result type="json" />
+		</action>
+		<action name="cashVerify_*" class="cashVerifyAction" method="{1}">
+			<result type="json" />
+		</action>
+		<action name="cashTransfer_*" class="cashTransferAction" method="{1}">
+			<result type="json" />
+		</action>
+	</package>
+</struts>

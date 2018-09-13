@@ -1,0 +1,19 @@
+@charset "utf-8";
+
+
+.img1{ margin-left: 90px;margin-top: 20px;}
+.tip1{margin-left: 70px;padding-top:15px;}
+.img2{position:absolute; top:130px; margin-left: 260px;margin-top: 0px;}
+.tip2{position:absolute;top:200px;  padding-top: 15px;margin-left: 220px;margin-top: 0px;}
+.img3{margin-left: 100px;margin-top: 90px;}
+.tip3{margin-left: 70px;}
+
+
+ .btnStation{top:60px; margin-left: 270px;}
+ .btnStation p {color: white;}
+ .form-btn{margin-top:300px;}
+.tipStation{position:absolute; margin-left: 100px;padding: 0px;margin-top:0px;}
+.tipStation h5{font-weight: bold;font-size: 15px;color: gray;}
+.tipStation li{color: gray;}
+								
+					

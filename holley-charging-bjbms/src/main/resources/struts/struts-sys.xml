@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC  
+    "-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"  
+    "http://struts.apache.org/dtds/struts-2.3.dtd">   
+<struts>
+	<!--系统管理 --> 
+	<package name="sys" namespace="/sys" extends="struts-base">
+		<!-- 角色管理 -->
+		<action name="roleList" class="roleAction" method="init">
+			<result name="success">/jsp/sys/roleList.jsp</result>
+		</action>
+		<action name="addRoleInit" class="roleAction" method="addRoleInit">
+			<result name="success">/jsp/sys/editRole.jsp</result>
+		</action>
+		<action name="editRoleInit" class="roleAction" method="editRoleInit">
+			<result name="success">/jsp/sys/editRole.jsp</result>
+		</action>
+		<action name="permissionInit" class="roleAction" method="permissionInit">
+			<result name="success">/jsp/sys/permission.jsp</result>
+		</action>
+		<!-- 用户管理 -->
+		<action name="userList" class="userAction" method="init">
+			<result name="success">/jsp/sys/userList.jsp</result>
+		</action>
+		<action name="addUserInit" class="userAction" method="addUserInit">
+			<result name="success">/jsp/sys/editUser.jsp</result>
+		</action>
+		<action name="editUserInit" class="userAction" method="editUserInit">
+			<result name="success">/jsp/sys/editUser.jsp</result>
+		</action>
+		<action name="userDetailInit" class="userAction" method="userDetailInit">
+			<result name="success">/jsp/sys/userDetail.jsp</result>
+		</action>
+		<!-- 优惠方案 -->
+		<action name="initRebateList" class="userAction" method="initRebateList">
+			<result name="success">/jsp/sys/rebateList.jsp</result>
+		</action>
+		<!-- 数据字典 -->
+		<action name="dictionary" class="dictionaryAction" method="init">
+			<result name="success">/jsp/sys/dictionary.jsp</result>
+		</action>
+		<action name="addLinkInit" class="dictionaryAction" method="addLinkInit">
+			<result name="success">/jsp/sys/editLink.jsp</result>
+		</action>
+		<action name="editLinkInit" class="dictionaryAction" method="editLinkInit">
+			<result name="success">/jsp/sys/editLink.jsp</result>
+		</action>
+		<!-- 规则配置 -->
+		<action name="ruleList" class="ruleAction" method="init">
+			<result name="success">/jsp/sys/ruleList.jsp</result>
+		</action>
+		<action name="addRuleInit" class="ruleAction" method="addRuleInit">
+			<result name="success">/jsp/sys/editRule.jsp</result>
+		</action>
+		<action name="editRuleInit" class="ruleAction" method="editRuleInit">
+			<result name="success">/jsp/sys/editRule.jsp</result>
+		</action>
+		<!-- 操作日志 -->
+		<action name="operationLog" class="operationLogAction" method="init">
+			<result name="success">/jsp/sys/operationLog.jsp</result>
+		</action>
+		<!-- 意见反馈 -->
+		<action name="suggestion" class="suggestionAction" method="init">
+			<result name="success">/jsp/sys/suggestion.jsp</result>
+		</action>
+	</package>
+	<package name="sys_json" namespace="/sys" extends="json-base">
+		<action name="role_*" class="roleAction" method="{1}">
+			<result type="json" />
+		</action>
+		<action name="user_*" class="userAction" method="{1}">
+			<result type="json" />
+		</action>
+		<action name="dic_*" class="dictionaryAction" method="{1}">
+			<result type="json" />
+		</action>
+		<action name="rule_*" class="ruleAction" method="{1}">
+			<result type="json" />
+		</action>
+		<action name="operationLog_*" class="operationLogAction" method="{1}">
+			<result type="json" />
+		</action>
+		<action name="suggestion_*" class="suggestionAction" method="{1}">
+			<result type="json" />
+		</action>
+	</package>
+</struts>

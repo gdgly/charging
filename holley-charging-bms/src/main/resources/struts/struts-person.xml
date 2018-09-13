@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC  
+    "-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"  
+    "http://struts.apache.org/dtds/struts-2.3.dtd">   
+<struts>
+	<!--个人管理 --> 
+	<package name="person" namespace="/person" extends="struts-base">
+		<!--个人信息查询 -->
+		<action name="userInfoList" class="userInfoAction" method="init">
+			<result name="success">/jsp/person/userInfoList.jsp</result>
+		</action>
+		<action name="userInfoDetail" class="userInfoAction" method="detailInit">
+			<result name="success">/jsp/person/userInfoDetail.jsp</result>
+		</action>
+		<!--个人实名认证审核 -->
+		<action name="userRealVerifyList" class="userRealVerifyAction" method="init">
+			<result name="success">/jsp/person/userRealVerifyList.jsp</result>
+		</action>
+		<action name="userRealVerify" class="userRealVerifyAction" method="realInfoInit">
+			<result name="success">/jsp/person/userRealVerify.jsp</result>
+		</action>
+		<action name="userRealVerifyDetail" class="userRealVerifyAction" method="detailInit">
+			<result name="success">/jsp/person/userRealVerifyDetail.jsp</result>
+		</action>
+		<!--用户开票查询-->
+		<action name="userReceiptList" class="userReceiptAction" method="init">
+			<result name="success">/jsp/person/userReceiptList.jsp</result>
+		</action>
+		<action name="userReceiptVerify" class="userReceiptAction" method="verifyInit">
+			<result name="success">/jsp/person/userReceiptVerify.jsp</result>
+		</action>
+		<!--个人桩代管申请查询-->
+		<action name="userPileApplyList" class="userPileApplyAction" method="init">
+			<result name="success">/jsp/person/userPileApplyList.jsp</result>
+		</action>
+		<action name="userPileApplyVerify" class="userPileApplyAction" method="verifyInit">
+			<result name="success">/jsp/person/userPileApplyVerify.jsp</result>
+		</action>
+		<!-- 开户开卡 -->
+		<action name="cardManager" class="cardManagerAction" method="cardManagerInit">
+			<result name="success">/jsp/chargecard/cardManager.jsp</result>
+		</action>
+		<!-- 开户 -->
+		<action name="registerUser" class="cardManagerAction" method="registerUserInit">
+			<result name="success">/jsp/chargecard/registerUser.jsp</result>
+		</action>
+		<!-- 开卡 -->
+		<action name="registerCard" class="cardManagerAction" method="registerCardInit">
+			<result name="success">/jsp/chargecard/registerCard.jsp</result>
+			<result name="member" type="redirectAction">cardManager</result>
+		</action>
+		<!-- 读卡信息 -->
+		<action name="cardInfo" class="cardManagerAction" method="cardInfoInit">
+			<result name="success">/jsp/chargecard/cardInfo.jsp</result>
+		</action>
+		<!-- 充电卡充值记录 -->
+		<action name="cardRechargeList" class="cardManagerAction" method="cardRechargeListInit">
+			<result name="success">/jsp/chargecard/cardRechargeList.jsp</result>
+		</action>
+	</package>
+	<package name="person_json" namespace="/person" extends="json-base">
+		<!--个人信息查询 -->
+		<action name="userInfo_*" class="userInfoAction" method="{1}">
+			<result type="json" />
+		</action>
+		<!--个人实名认证审核 -->
+		<action name="userRealVerify_*" class="userRealVerifyAction" method="{1}">
+			<result type="json" />
+		</action>
+		<!--用户开票查询-->
+		<action name="userReceipt_*" class="userReceiptAction" method="{1}">
+			<result type="json" />
+		</action>
+		<!--个人桩代管申请查询-->
+		<action name="userPileApply_*" class="userPileApplyAction" method="{1}">
+			<result type="json" />
+		</action>
+		<!--充电卡管理-->
+		<action name="cardManager_*" class="cardManagerAction" method="{1}">
+			<result type="json" />
+		</action>
+	</package>
+</struts>

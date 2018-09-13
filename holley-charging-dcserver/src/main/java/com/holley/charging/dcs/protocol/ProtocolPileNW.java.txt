@@ -1,0 +1,2532 @@
+package com.holley.charging.dcs.protocol;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Random;
+
+import com.holley.charging.dcs.dao.model.ChargeRecord;
+import com.holley.charging.dcs.dao.model.DcsHisYa;
+import com.holley.charging.dcs.dao.model.DcsHisYc;
+import com.holley.charging.dcs.dao.model.DcsHisYx;
+import com.holley.charging.dcs.dao.model.PileFeeModel;
+import com.holley.charging.dcs.service.channel.ChannelService;
+import com.holley.charging.dcs.service.device.PileService;
+import com.holley.common.cache.charging.ChargingCacheUtil;
+import com.holley.common.constants.charge.ChargeCurrentTypeEnum;
+import com.holley.common.constants.charge.PileStatusEnum;
+import com.holley.common.dataobject.PileStatusBean;
+import com.holley.common.rocketmq.charging.MsgChargeStart;
+import com.holley.common.rocketmq.charging.MsgChargeStop;
+import com.holley.common.util.ProtocolUtils;
+
+public class ProtocolPileNW extends BaseProtocol implements IProtocol {
+
+    public static ProtocolPileNW protocolPileNB = new ProtocolPileNW();
+
+    private final byte           TYPE_M_SP_NA_1 = 1;
+    private final byte           TYPE_M_ME_NB_1 = 11;
+    private final byte           TYPE_M_IT_NA_1 = 15;
+    private final byte           TYPE_M_RE_NA_1 = (byte) 130;
+    private final byte           TYPE_M_MD_NA_1 = (byte) 132;
+    private final byte           TYPE_M_JC_NA_1 = (byte) 134;
+    private final byte           TYPE_C_IC_NA_1 = 100;
+    private final byte           TYPE_C_CI_NA_1 = 101;
+    private final byte           TYPE_C_CS_NA_1 = 103;
+    private final byte           TYPE_C_SD_NA_1 = (byte) 133;
+
+    private final byte           U_T_STARTDT    = 0x07;
+    private final byte           U_T_TEST       = 0x43;
+
+    private final int            T0_104         = 20;                              // t0：连接建立的超时时间，默认 20 秒；
+    private final int            T1_104         = 15;                              // t1：发送或测试 APDU 的超时时间，默认 15 秒；
+    private final int            T2_104         = 10;                              // t2：无数据报文确认的超时时间，默认 10 秒；
+    private final int            T3_104         = 20;                              // t3：长期空闲状态下发送测试帧的超时时间，默认 20 秒
+    private final int            T4_heart       = 300;                             // 心跳间隔，超过此间隔没收到心跳，重新连接，这里的冗余量比较大
+    private final int            K_104_MAX      = 9;                               // K:发送方未被确认的 I 格式帧的最大数目
+    private int                  K_104          = 0;                               // 当前发送方未被确认的 I 格式帧的数目
+    private final int            W_104_MAX      = 6;                               // W:接收方最多收到未给确认的 I 格式帧的最大数目
+    private int                  W_104          = 0;                               // 当前接收方收到未给确认的 I 格式帧的数目
+
+    private Date                 lastRecvTime   = Calendar.getInstance().getTime();
+    private Date                 lastSendTime   = Calendar.getInstance().getTime();
+    private boolean              needConfirm    = false;
+    // 发送接收序列号
+    private short                N_S            = 0;
+    private short                N_R            = 0;
+
+    public PileService registerProtocol(byte[] buffer, ChannelService channel) {
+        if (buffer == null || buffer.length < 17) {
+            return null;
+        }
+        int index = 0;
+        for (index = 0; index <= buffer.length - 17; index++) {
+            /*
+             * 起始标识 1Byte BIN码 固定68H 长度 2Byte BIN码 固定为 0EH 启动帧标识 1Byte BIN码 固定为 FF 协议版本 1Byte 压缩BCD码 保留为02 设备编号 8Byte
+             * 压缩BCD码 充电设备编号 充电接口数量 1Byte 压缩BCD码 充电模式 1Byte BIN码 站地址 2Byte 压缩BCD码 站地址
+             */
+            if (buffer[index] == 0x68 && buffer[index + 1] == 0x0E && buffer[index + 2] == 0x0 && ProtocolUtils.Unsignd(buffer[index + 3]) == 0xFF && buffer[index + 4] == 0x02) { // 注册帧
+                // 设备编号
+                String devaddr = ProtocolUtils.getByteToHexStringDesc(buffer, index + 5, 8, "");
+                PileService pileService = channel.linkPile(devaddr);
+                if (pileService == null) {
+                    continue;
+                }
+
+                byte[] reply = new byte[17];
+                System.arraycopy(buffer, index, reply, 0, 17);
+                channel.writeData(reply);
+                channel.setReadDealPtr(channel.getReadDealPtr() + index + 17);
+                pileService.notifyLogin(buffer);
+                return pileService;
+            }
+        }
+        return null;
+    }
+
+    public int onReceive(byte[] msg, PileService pileService, ChannelService channel) {
+        int eopLen = 7;
+        if (msg == null || msg.length < eopLen) {
+            return 0;
+        }
+        int dealLen = 0;
+        int recvLen = msg.length;
+        while (recvLen - dealLen > 0) {
+            if (msg[dealLen] != 0x68) {
+                dealLen++;
+                continue;
+            }
+            if (recvLen - dealLen < eopLen) {
+                return dealLen;
+            }
+            APCI apci = new APCI(msg, dealLen);
+
+            if (apci.length + 3 > recvLen - dealLen) { // 长度不够
+                if (apci.length > 2047) { // 非法长度
+                    dealLen++;
+                    continue;
+                }
+                return dealLen;
+            }
+            dealLen += 3;
+            lastRecvTime = Calendar.getInstance().getTime();
+            needConfirm = false;
+            if (apci.length == 4) { // 无ASDU数据，U帧、S帧
+
+                if (msg[dealLen] == 0x0B && msg[dealLen + 1] == 0x0 && msg[dealLen + 2] == 0x0 && msg[dealLen + 3] == 0x0) { // STARTDT_CONT
+                    // 发起总召
+                    writeData_I(channel, makeIFrame(pileService, TYPE_C_IC_NA_1, 0, null));
+
+                } else if (msg[dealLen] == 0x43 && msg[dealLen + 1] == 0x0 && msg[dealLen + 2] == 0x0 && msg[dealLen + 3] == 0x0) { // TEST
+                    // 确认测试
+                    byte[] U_TEST = { 0x68, 0x04, 0x00, (byte) 0x83, 0x00, 0x00, 0x00 };
+                    channel.writeData(U_TEST);
+                }
+            } else {
+                ASDU asdu = new ASDU(msg, dealLen, apci.length);
+                if (N_R != apci.ns) { // 出现漏帧或重复帧，关闭现在的 TCP 连接
+                    closeConnect(pileService, channel);
+                }
+                N_R++;
+                if (asdu.infoList != null && asdu.infoList.size() > 0) {
+                    W_104++;
+                    PileStatusBean bean = ChargingCacheUtil.getPileStatusBean(pileService.getPile().getId());
+                    switch (asdu.type) {
+                        case TYPE_M_SP_NA_1:
+                            List<DcsHisYx> hisYxs;
+                            hisYxs = getHisYx(pileService, asdu, bean);
+                            pileService.getDataBaseService().saveData(hisYxs.toArray());
+                            break;
+                        case TYPE_M_ME_NB_1:
+                            List<DcsHisYc> hisYcs;
+                            hisYcs = getHisYc11(pileService, asdu, bean);
+                            bean.setPilecode(pileService.getPile().getPileCode());
+                            bean.setUpdatetime(Calendar.getInstance().getTime());
+                            pileService.freshMemPileStatus(bean);
+                            pileService.getDataBaseService().saveData(hisYcs.toArray());
+                            break;
+                        case TYPE_M_IT_NA_1:
+                            break;
+                        case TYPE_M_RE_NA_1:
+                            TYPE130 type_130 = (TYPE130) asdu.infoList.get(0).data;
+                            switch (type_130.type) {
+                                case BizTypeUp.Auth:
+                                    BizUpAuth bizUpAuth = (BizUpAuth) type_130.value;
+                                    BizDownAuth downAuth = new BizDownAuth(pileService, bizUpAuth.cardNo);
+                                    writeData_I(channel, makeIFrame(pileService, TYPE_C_SD_NA_1, 0, downAuth));
+                                    bean.setStatus(PileStatusEnum.CHARGING);
+                                    bean.setUpdatetime(Calendar.getInstance().getTime());
+                                    pileService.freshMemPileStatus(bean);
+                                    break;
+                                case BizTypeUp.ChargeRec:
+                                    // 记录数据库
+                                    BizUpChargeRec rec = (BizUpChargeRec) type_130.value;
+                                    saveChargeRec(pileService, rec);
+                                    BizDownChargeConfirm chargeConfirm = new BizDownChargeConfirm(pileService);
+                                    writeData_I(channel, makeIFrame(pileService, TYPE_C_SD_NA_1, 0, chargeConfirm));
+                                    break;
+                                case BizTypeUp.TradeRandom:
+                                    Random random = new Random();
+                                    String randomNO = String.valueOf(Math.abs(random.nextInt()));
+                                    BizDownTradeRandom tradeRandom = new BizDownTradeRandom(pileService, randomNO);
+                                    writeData_I(channel, makeIFrame(pileService, TYPE_C_SD_NA_1, 0, tradeRandom));
+                                    break;
+                                case BizTypeUp.ReqFeeModel:
+                                    PileFeeModel pfm = pileService.getUpdatePFM(Calendar.getInstance().getTime());
+                                    if (pfm != null) {
+                                        BizDownFeeModel bdfm = new BizDownFeeModel(pileService, pfm);
+                                        writeData_I(channel, makeIFrame(pileService, TYPE_C_SD_NA_1, 0, bdfm));
+                                    }
+
+                                    writeData_S(channel, makeFrame_S());
+                                    // BizDownFeeModel feeModel = new BizDownFeeModel(pileService);
+                                    // writeData_I(channel,makeIFrame(pileService,TYPE_C_SD_NA_1,0,feeModel));
+                                    break;
+                                case BizTypeUp.TwowayAuthStart:
+                                    random = new Random();
+                                    randomNO = String.valueOf(Math.abs(random.nextInt()));
+                                    BizDownTwowayAuthRandom authRandom = new BizDownTwowayAuthRandom(pileService, randomNO);
+                                    writeData_I(channel, makeIFrame(pileService, TYPE_C_SD_NA_1, 0, authRandom));
+                                    break;
+                                case BizTypeUp.TwowayAuthData:
+                                    random = new Random();
+                                    String sysAuthCode = String.valueOf(Math.abs(random.nextInt()));
+                                    BizDownTwowayAuthData authData = new BizDownTwowayAuthData(pileService, sysAuthCode);
+                                    writeData_I(channel, makeIFrame(pileService, TYPE_C_SD_NA_1, 0, authData));
+                                    break;
+                                case BizTypeUp.KeyUpdateBase:
+                                    // BizDownKey1Update key1Update = new BizDownKey1Update(pileService,key1Data);
+                                    // writeData_I(channel,makeIFrame(pileService,TYPE_C_SD_NA_1,0,key1Update));
+                                    break;
+                                case BizTypeUp.Key1UpdateResult:
+                                    // BizDownKey2Update key2Update = new BizDownKey2Update(pileService,key2Data);
+                                    // writeData_I(channel,makeIFrame(pileService,TYPE_C_SD_NA_1,0,key2Update));
+                                    break;
+                                case BizTypeUp.BlackListResult:
+                                    BizUpBlackListResult blackListResult = (BizUpBlackListResult) type_130.value;
+                                    BizDownBlackList blackList = new BizDownBlackList(pileService, blackListResult.timeStampNo);
+                                    writeData_I(channel, makeIFrame(pileService, TYPE_C_SD_NA_1, 0, blackList));
+                                    break;
+                                case BizTypeUp.RemoteStartResult:
+                                    BizUpRemoteStartResult startResult = (BizUpRemoteStartResult) type_130.value;
+                                    if (startResult.isSuccess == 0) {
+                                        bean.setStatus(PileStatusEnum.CHARGING);
+                                        ChargingCacheUtil.setPileStatusBean(bean);
+                                        pileService.freshMemPileStatus(bean);
+                                    }
+                                    writeData_S(channel, makeFrame_S());
+                                    break;
+                                case BizTypeUp.RemoteStopResult:
+                                    BizUpRemoteStopResult stopResult = (BizUpRemoteStopResult) type_130.value;
+                                    if (stopResult.isSuccess == 0) {
+                                        bean.setStatus(PileStatusEnum.IDLE);
+                                        ChargingCacheUtil.setPileStatusBean(bean);
+                                        pileService.freshMemPileStatus(bean);
+                                    }
+                                    writeData_S(channel, makeFrame_S());
+                                    break;
+                                case BizTypeUp.ChargingData:
+                                    long cha = Calendar.getInstance().getTime().getTime() - ((BizUpChargingData) type_130.value).startTime.getTime().getTime();
+                                    long hours = cha / (1000 * 60 * 60);
+                                    bean.setChalen((int) hours);
+                                    bean.setChapower(((BizUpChargingData) type_130.value).totalElec);
+                                    bean.setUpdatetime(Calendar.getInstance().getTime());
+                                    pileService.freshMemPileStatus(bean);
+                                    BizDownChargingDataResult chargingDataResult = new BizDownChargingDataResult(pileService);
+                                    writeData_I(channel, makeIFrame(pileService, TYPE_C_SD_NA_1, 0, chargingDataResult));
+                                    break;
+                                default:
+                                    writeData_S(channel, makeFrame_S());
+                                    break;
+                            }
+                            break;
+                        case TYPE_M_MD_NA_1:
+                            DcsHisYa hisYa = new DcsHisYa();
+                            TYPE132 type_132 = (TYPE132) asdu.infoList.get(0).data;
+                            hisYa.setChargeid(pileService.getPile().getId());
+                            if (pileService.getPile().getChaWay().equals(ChargeCurrentTypeEnum.DC.getShortValue())) {
+                                hisYa.setDataType(INFO_ADDR_DC.getYXCode(asdu.infoList.get(0).addr));
+                            } else {
+                                hisYa.setDataType(INFO_ADDR_AC.getYXCode(asdu.infoList.get(0).addr));
+                            }
+                            hisYa.setDataTime(Calendar.getInstance().getTime());
+                            int value = ProtocolUtils.byteToInteger(type_132.value, 0);
+                            hisYa.setValue(value);
+                            pileService.getDataBaseService().saveData(hisYa);
+                            bean.setChapower(Double.valueOf(value + ""));
+                            pileService.freshMemPileStatus(bean);
+                            break;
+                        case TYPE_M_JC_NA_1:
+                            TYPE134 type_134 = (TYPE134) asdu.infoList.get(0).data;
+                            if (type_134 != null) {
+                                if (pileService.getPile().getChaWay().intValue() != type_134.type) {
+                                    logger.error("Pile parameters error!!(PileID=" + pileService.getPile().getId() + ")	Cha_way=" + pileService.getPile().getChaWay()
+                                                 + ",but type=" + type_134.type);
+                                }
+                                if (type_134.type == 1) {
+                                    BizACPileMonitor acMonitor = (BizACPileMonitor) type_134.value;
+                                    bean.setOuti(String.valueOf(acMonitor.acOutI));
+                                    bean.setOutv(String.valueOf(acMonitor.acOutV));
+                                    bean.setChalen(acMonitor.totalTime);
+                                    bean.setChapower((double) acMonitor.ygZong);// 有功总电度
+                                    bean.setIsonline((short) 1);
+                                    if (acMonitor.workstatus == 1) {
+                                        bean.setStatus(PileStatusEnum.FAULT);// 告警是故障？
+                                    } else if (acMonitor.workstatus == 2) {
+                                        bean.setStatus(PileStatusEnum.IDLE);
+                                    } else if (acMonitor.workstatus == 3) {
+                                        bean.setStatus(PileStatusEnum.CHARGING);
+                                    } else if (acMonitor.workstatus == 4) {
+                                        bean.setStatus(PileStatusEnum.OFFLINE);
+                                    } else {
+                                        bean.setStatus(PileStatusEnum.FINISH);
+                                    }
+                                } else if (type_134.type == 2) {
+                                    BizDCPileMonitor dcMonitor = (BizDCPileMonitor) type_134.value;
+                                    bean.setOuti(String.valueOf(dcMonitor.dcOutI));
+                                    bean.setOutv(String.valueOf(dcMonitor.dcOutV));
+                                    bean.setChalen(dcMonitor.totalTime);
+                                    bean.setChapower((double) dcMonitor.ygZong);// 有功总电度
+                                    bean.setIsonline((short) 1);
+                                    if (dcMonitor.workstatus == 1) {
+                                        bean.setStatus(PileStatusEnum.FAULT);// 告警是故障？
+                                    } else if (dcMonitor.workstatus == 2) {
+                                        bean.setStatus(PileStatusEnum.IDLE);
+                                    } else if (dcMonitor.workstatus == 3) {
+                                        bean.setStatus(PileStatusEnum.CHARGING);
+                                    } else if (dcMonitor.workstatus == 4) {
+                                        bean.setStatus(PileStatusEnum.OFFLINE);
+                                    } else {
+                                        bean.setStatus(PileStatusEnum.FINISH);
+                                    }
+                                }
+                            }
+                            pileService.freshMemPileStatus(bean);
+                            break;
+                        default:
+                            break;
+                    }
+                    if (W_104 >= W_104_MAX) {
+                        writeData_S(channel, makeFrame_S());
+                    }
+                }
+            }
+            dealLen += apci.length;
+        }
+        return dealLen;
+    }
+
+    private void saveChargeRec(PileService pileService, BizUpChargeRec rec) {
+        ChargeRecord chargeRecord = new ChargeRecord();
+        chargeRecord.setChargeid(pileService.getPile().getId());
+        chargeRecord.setChargeType((short) 1);
+        chargeRecord.setPileNum((short) rec.chargeInterface);
+        chargeRecord.setTradeNo(rec.tradeNo);
+        chargeRecord.setPayNo(rec.payNo);
+        chargeRecord.setCardNo(rec.CardNo);
+        chargeRecord.setIsTimes(Short.valueOf(rec.isTimes));
+        chargeRecord.setStartTime((rec.startTime).getTime());
+        chargeRecord.setEndTime((rec.endTime).getTime());
+        chargeRecord.setBmj1(rec.jianBegValue);// BMJ1 尖起示值
+        chargeRecord.setBmj2(rec.jianEndValue);
+        chargeRecord.setBmf1(rec.peakBegValue);// BMF1 峰起示值
+        chargeRecord.setBmf2(rec.peakEndValue);
+        chargeRecord.setBmp1(rec.flatBegValue);// BMP1 平起示值
+        chargeRecord.setBmp2(rec.flatEndValue);
+        chargeRecord.setBmg1(rec.valleyBegValue);// BMG1 谷起示值
+        chargeRecord.setBmg2(rec.valleyEndValue);
+        chargeRecord.setMetType(Double.valueOf(rec.metType));// MET_TYPE 计量类型
+        chargeRecord.setBmz1(rec.totalBegValue);// BMZ1 总起示值
+        chargeRecord.setBmz2(rec.totalEndValue);
+
+        chargeRecord.setDjj(new BigDecimal((rec.jianPrice) + ""));
+        chargeRecord.setDlj(rec.jianElec);
+        chargeRecord.setJej(new BigDecimal((rec.jianMoney) + ""));// JEJ 尖金额
+
+        chargeRecord.setDjf(new BigDecimal((rec.peakPrice) + ""));
+        chargeRecord.setDlf(rec.peakElec);
+        chargeRecord.setJef(new BigDecimal((rec.peakMoney) + ""));
+
+        chargeRecord.setDjp(new BigDecimal((rec.flatPrice) + ""));
+        chargeRecord.setDlp(rec.flatElec);
+        chargeRecord.setJep(new BigDecimal((rec.flatMoney) + ""));
+
+        chargeRecord.setDjg(new BigDecimal((rec.valleyPrice) + ""));
+        chargeRecord.setDlg(rec.valleyElec);
+        chargeRecord.setJeg(new BigDecimal((rec.valleyMoney) + ""));
+
+        chargeRecord.setDlz(rec.totalElec);
+        chargeRecord.setBusType(Short.valueOf(rec.businessType));
+        chargeRecord.setAfterMoney(new BigDecimal((rec.afterMoney) + ""));
+        chargeRecord.setXfdj(new BigDecimal((rec.consumPrice) + ""));
+        chargeRecord.setXfje(new BigDecimal((rec.consumMoney) + ""));
+        chargeRecord.setMark(rec.carId);
+        chargeRecord.setPayStatus((short) rec.payStatus);
+        chargeRecord.setClientNo(rec.clientNo);
+        chargeRecord.setBeforeMoney(new BigDecimal((rec.beforeMoney) + ""));
+        chargeRecord.setBagNo(rec.walletTradeNo);
+        chargeRecord.setPayMoney(new BigDecimal((rec.payMoney) + ""));
+        chargeRecord.setDateTime(rec.payTime);
+        chargeRecord.setRadomNo(rec.randomNo);
+        chargeRecord.setPayType((short) rec.payType);
+        chargeRecord.setTac(rec.TAC);
+        chargeRecord.setKeyVersion(String.valueOf(rec.keyVersion));
+        chargeRecord.setTerminalNo(rec.terminalNo);
+        chargeRecord.setChaPrice(new BigDecimal((rec.chargePrice) + ""));
+        chargeRecord.setChaMoney(new BigDecimal((rec.chargeMoney) + ""));
+
+        pileService.getDataBaseService().saveData(chargeRecord);
+
+    }
+
+    private void closeConnect(PileService pileService, ChannelService channel) {
+        channel.closeChannel();
+        pileService.unLinkChannel();
+    }
+
+    private List<DcsHisYc> getHisYc11(PileService pileService, ASDU asdu, PileStatusBean bean) {
+        List<DcsHisYc> hisYcs = new ArrayList<DcsHisYc>();
+        for (int i = 0; i < asdu.infoList.size(); i++) {
+            DcsHisYc hisYc = new DcsHisYc();
+            TYPE11 type_11 = (TYPE11) asdu.infoList.get(i).data;
+            hisYc.setChargeid(pileService.getPile().getId());
+            if (pileService.getPile().getChaWay().equals(ChargeCurrentTypeEnum.DC.getShortValue())) {
+                hisYc.setDataType(INFO_ADDR_DC.getYCCode(asdu.infoList.get(i).addr));
+                if (INFO_ADDR_DC.OUT_V == asdu.infoList.get(i).addr) {
+                    bean.setOutv(String.valueOf(type_11.value));
+                } else if (INFO_ADDR_DC.OUT_I == asdu.infoList.get(i).addr) {
+                    bean.setOuti(String.valueOf(type_11.value));
+                }
+            } else {
+                hisYc.setDataType(INFO_ADDR_AC.getYCCode(asdu.infoList.get(i).addr));
+                if (INFO_ADDR_DC.OUT_V == asdu.infoList.get(i).addr) {
+                    bean.setOutv(String.valueOf(type_11.value));
+                } else if (INFO_ADDR_DC.OUT_I == asdu.infoList.get(i).addr) {
+                    bean.setOuti(String.valueOf(type_11.value));
+                }
+            }
+            hisYc.setDataTime(Calendar.getInstance().getTime());
+            hisYc.setValue((int) type_11.value);
+            hisYcs.add(hisYc);
+        }
+        return hisYcs;
+    }
+
+    private List<DcsHisYx> getHisYx(PileService pileService, ASDU asdu, PileStatusBean bean) {
+        List<DcsHisYx> hisYxs = new ArrayList<DcsHisYx>();
+        for (int i = 0; i < asdu.infoList.size(); i++) {
+            DcsHisYx hisYx = new DcsHisYx();
+            TYPE1 type_1 = (TYPE1) asdu.infoList.get(i).data;
+            hisYx.setChargeid(pileService.getPile().getId());
+            if (pileService.getPile().getChaWay().equals(ChargeCurrentTypeEnum.DC.getShortValue())) {
+                hisYx.setDataType(INFO_ADDR_DC.getYXCode(asdu.infoList.get(i).addr));
+            } else {
+                hisYx.setDataType(INFO_ADDR_AC.getYXCode(asdu.infoList.get(i).addr));
+            }
+            hisYx.setDataTime(Calendar.getInstance().getTime());
+            hisYx.setValue((int) type_1.spi);
+            hisYxs.add(hisYx);
+        }
+        return hisYxs;
+    }
+
+    @Override
+    public int onLogin(byte[] data, PileService pileService, ChannelService channel) {
+
+        // 注册后初始化
+        N_S = 0;
+        N_R = 0;
+
+        if (data != null && data.length >= 12) {
+            // 站地址
+            short pubaddr = ProtocolUtils.byteToShort(data[14], data[13]);
+            pileService.getPile().setPubAddress(pubaddr);
+        }
+        // 注册成功,发送U帧
+        return channel.writeData(makeFrame_U(U_T_STARTDT));
+    }
+
+    @Override
+    public int sendHeart(PileService pileService, ChannelService channel) {
+        return channel.writeData(makeFrame_U(U_T_TEST));
+    }
+
+    private byte[] makeFrame_S() {
+        byte[] S = { 0x68, 0x04, 0x00, 0x01, 0x00, (byte) ((N_R << 1) & 0xFF), (byte) ((N_R >> 7) & 0xFF) };
+        return S;
+    }
+
+    private byte[] makeFrame_U(byte type) {
+        byte[] U_STARTDT = { 0x68, 0x04, 0x00, type, 0x00, 0x00, 0x00 };
+        return U_STARTDT;
+    }
+
+    private byte[] makeIFrame(PileService pileService, byte type, int infoaddr, BizDownBase biz) {
+        APDU callAll = new APDU();
+        if (type == TYPE_C_IC_NA_1) {
+            callAll.apci.ns = N_S;
+            callAll.apci.nr = N_R;
+            callAll.asdu.sq = 0;
+            callAll.asdu.num = 1;
+            callAll.asdu.cos = 6;
+        } else {
+            callAll.apci.ns = N_S;
+            callAll.apci.nr = N_R;
+            callAll.asdu.sq = 1;
+            callAll.asdu.num = 127;
+            callAll.asdu.cos = 7;
+        }
+
+        callAll.asdu.type = type;
+
+        // 激活
+        callAll.asdu.pubaddr = pileService.getPile().getPubAddress();
+        callAll.asdu.infoList.add(new ASDU_Info(infoaddr));
+        N_S++;
+        return callAll.toByte(biz);
+    }
+
+    private class APCI {
+
+        byte  start_c = 0x68;
+        short length  = 0;
+        short ns      = 0;
+        short nr      = 0;
+
+        APCI() {
+
+        }
+
+        APCI(byte[] buf, int from) {
+            length = ProtocolUtils.byteToShort(buf[from + 2], buf[from + 1]);
+            ns = ProtocolUtils.byteToShort(buf[from + 4], buf[from + 3]);
+            nr = ProtocolUtils.byteToShort(buf[from + 6], buf[from + 5]);
+        }
+
+        byte[] toByte() {
+            byte[] APCI = { start_c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+            APCI[1] = (byte) (length & 0xFF);
+            APCI[2] = (byte) ((length >> 8) & 0x07);
+
+            APCI[4] = (byte) ((ns << 1) & 0xFF);
+            APCI[3] = (byte) ((ns >> 7) & 0xFF);
+
+            APCI[5] = (byte) (nr & 0xFF);
+            APCI[6] = (byte) ((nr >> 8) & 0xFF);
+
+            // APCI[3] = (byte)(ns&0xFF);
+            // APCI[4] = (byte)((ns>>8)&0xFF);
+            //
+            // APCI[5] = (byte)(nr&0xFF);
+            // APCI[6] = (byte)((nr>>8)&0xFF);
+            return APCI;
+        }
+    }
+
+    private class ASDU {
+
+        byte            type;
+        byte            sq;
+        byte            num;
+        short           cos;
+        short           pubaddr;
+        List<ASDU_Info> infoList = new ArrayList<ASDU_Info>();
+        byte[]          appdata;
+
+        ASDU() {
+
+        }
+
+        ASDU(byte[] data, int from, int len) {
+            int index = from + 4;
+            type = data[index++];
+            num = (byte) (data[index] & 0x7F);
+            if (num == 0) {
+                num = 1;
+            }
+            sq = (byte) ((data[index] & 0x80) == 0 ? 0 : 1);
+            index++;
+            cos = ProtocolUtils.byteToShort(data[index + 1], data[index]);
+            index += 2;
+            pubaddr = ProtocolUtils.byteToShort(data[index + 1], data[index]);
+            index += 2;
+
+            if (sq == 0) {
+                for (int i = 0; i < num; i++) {
+                    int addr_info = ProtocolUtils.Unsignd(data[index]) + ProtocolUtils.Unsignd(data[index + 1]) * 0x100 + ProtocolUtils.Unsignd(data[index + 2]) * 0x10000;
+                    index += 3;
+                    ASDU_Info info = new ASDU_Info(addr_info);
+                    int infodatalen = parseASDUInfo(type, data, index, info);
+                    index += infodatalen;
+                    infoList.add(info);
+                }
+            } else {
+                int addr_info = ProtocolUtils.Unsignd(data[index]) + ProtocolUtils.Unsignd(data[index + 1]) * 0x100 + ProtocolUtils.Unsignd(data[index + 2]) * 0x10000;
+                index += 3;
+                for (int i = 0; i < num; i++) {
+                    ASDU_Info info = new ASDU_Info(addr_info);
+                    int infodatalen = parseASDUInfo(type, data, index, info);
+                    index += infodatalen;
+                    infoList.add(info);
+                }
+            }
+
+        }
+
+        byte[] toByte(BizDownBase biz) {
+            int index = 0; // APCI的长度
+            byte[] data = new byte[2096];
+
+            data[index++] = type;
+            data[index++] = sq == 0 ? num : (byte) (num | 0x80);
+            data[index++] = (byte) (cos & 0xFF);
+            data[index++] = (byte) ((cos >> 8) & 0xFF);
+            data[index++] = (byte) (pubaddr & 0xFF);
+            data[index++] = (byte) ((pubaddr >> 8) & 0xFF);
+            for (int i = 0; i < infoList.size(); i++) {
+                data[index++] = (byte) (infoList.get(i).addr & 0xFF);
+                data[index++] = (byte) ((infoList.get(i).addr >> 8) & 0xFF);
+                data[index++] = 0;
+                switch (type) {
+                    case TYPE_C_IC_NA_1:
+                        data[index++] = 0x14; // 站召唤
+                        break;
+                    case TYPE_C_CI_NA_1:
+                        data[index++] = 0x05; // 站召唤
+                        break;
+                    case TYPE_C_CS_NA_1:
+                        if (infoList.get(i).data instanceof Calendar) {
+                            Calendar date = (Calendar) infoList.get(i).data;
+                            ProtocolUtils.copyBytes(cp56time2a.toByte(date), 0, data, index, 7);
+                        }
+                        break;
+                    case TYPE_C_SD_NA_1:
+                        data[index++] = (byte) biz.type;
+                        System.arraycopy(biz.toByte(), 0, data, index, biz.toByte().length);
+                        break;
+                    default:
+                        break;
+                }
+            }
+            byte[] result = new byte[index];
+            ProtocolUtils.copyBytes(data, result, index);
+            return result;
+        }
+
+        int parseASDUInfo(byte type, byte[] data, int from, ASDU_Info info) {
+            int len = 0;
+            switch (type) {
+                case TYPE_M_SP_NA_1:
+                    info.data = new TYPE1(data[from], info.addr);
+                    len = 1;
+                    break;
+                case TYPE_M_ME_NB_1:
+                    len = 3;
+                    info.data = new TYPE11(data, from, info.addr);
+                    break;
+                case TYPE_M_IT_NA_1:
+                    len = 5;
+                    info.data = new TYPE15(data, from, info.addr);
+                    break;
+                case TYPE_M_RE_NA_1:
+                    info.data = new TYPE130(data, from, info.addr);
+                    len = ((TYPE130) info.data).len + 2;
+                    break;
+                case TYPE_M_MD_NA_1:
+                    info.data = new TYPE132(data, from, info.addr);
+                    len = ((TYPE132) info.data).len + 2;
+                    break;
+                case TYPE_M_JC_NA_1:
+                    // info.data = new BizPileMonitor(data,from);
+                    info.data = new TYPE134(data, from, info.addr);
+
+                    len = ((TYPE134) info.data).len + 2;
+                    break;
+                default:
+                    break;
+            }
+            return len;
+        }
+    }
+
+    private class ASDU_Info {
+
+        public ASDU_Info(int infoaddr) {
+            addr = infoaddr;
+        }
+
+        int    addr;
+        Object data;
+    }
+
+    private class APDU {
+
+        APCI apci = new APCI();
+        ASDU asdu = new ASDU();
+
+        byte[] toByte(BizDownBase biz) {
+            byte[] buf_asdu = asdu.toByte(biz);
+            byte[] data = new byte[buf_asdu.length + 7];
+            apci.length = (short) (buf_asdu.length + 4);
+            ProtocolUtils.copyBytes(apci.toByte(), data, 7);
+            ProtocolUtils.copyBytes(buf_asdu, 0, data, 7, buf_asdu.length);
+            return data;
+        }
+    }
+
+    private static class cp56time2a {
+
+        static byte[] toByte(Calendar date) {
+            short sec = (short) date.get(Calendar.SECOND);
+            short mil = (short) date.get(Calendar.MILLISECOND);
+            short msec = (short) (sec * 1000 + mil);
+            byte min = (byte) date.get(Calendar.MINUTE);
+            byte hour = (byte) date.get(Calendar.HOUR_OF_DAY);
+            ;
+            byte day_m = (byte) date.get(Calendar.DAY_OF_MONTH);
+            byte day_w = (byte) (date.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY ? 7 : date.get(Calendar.DAY_OF_WEEK));
+            byte month = (byte) (date.get(Calendar.MONTH) + 1);
+            byte year = (byte) (date.get(Calendar.YEAR) - 2000);
+            byte[] time = new byte[7];
+            time[0] = (byte) (msec & 0xFF);
+            time[1] = (byte) ((msec >> 8) & 0xFF);
+            time[2] = (byte) (min & 0x3F);
+            time[3] = (byte) (hour & 0x1F);
+            time[4] = (byte) ((day_m & 0x1F) | (day_w << 5));
+            time[5] = month;
+            time[6] = year;
+            return time;
+        }
+
+        static Calendar toDate(byte[] buf) {
+            if (buf == null || buf.length < 7) {
+                return null;
+            }
+            Calendar date = Calendar.getInstance();
+            date.set(ProtocolUtils.Unsignd(buf[6]) + 2000, ProtocolUtils.Unsignd(buf[5]), ProtocolUtils.Unsignd((byte) (buf[4] & 0x1F)),
+                     ProtocolUtils.Unsignd((byte) (buf[3] & 0x1F)), ProtocolUtils.Unsignd((byte) (buf[2] & 0x3F)), ProtocolUtils.byteToShort(buf[1], buf[1]) / 1000);
+            return date;
+        }
+    }
+
+    private class BizTypeUp {
+
+        static final int Auth                  = 1; // <1> 鉴权数据
+        static final int ChargeRec             = 2; // <2> 充电记录上传数据
+        static final int TradeRandom           = 3; // <3> 交易取随机数
+        static final int ReqFeeModel           = 4; // <4> 请求下发计费模型数据
+        static final int ResultFeeModel        = 5; // <5> 下发计费模型结果数据
+        static final int TwowayAuthStart       = 6; // <6> 双向认证中终端发起双向认证上行数据
+        static final int TwowayAuthData        = 7; // <7> 双向认证中终端上送认证数据上行数据
+        static final int KeyUpdateBase         = 8; // <8> 密钥更新中基本数据
+        static final int Key1UpdateResult      = 9; // <9> 密钥更新中密钥文件1接受成功数据
+        static final int Key2UpdateResult      = 10; // <10> 密钥更新中密钥文件2更新成功数据
+        static final int BlackListResult       = 11; // <11> 黑名单下发时上行数据
+        static final int TwowayAuthResult      = 12; // <12> 双向认证终端认证运营管理系统上行数据
+        static final int RemoteStartResult     = 13; // <13> 远程启动充电执行结果
+        static final int RemoteStopResult      = 14; // <14> 远程终止充电执行结果
+        static final int PowerControlResult    = 15; // <15> 远程功率控制结果
+        static final int SoftUpdateResult      = 16; // <16> 远程升级启动命令接收结果
+        static final int ChargingData          = 17; // <17> 充电过程中上传数据
+        static final int ChargingDataSetResult = 18; // <18> 充电设备数据上报参数设置结果
+    }
+
+    private class BizTypeDown {
+
+        static final int BlackList          = 1; // <1> 黑名单下发时下行数据
+        static final int Auth               = 2; // <2> 充电鉴权下行数据
+        static final int ChargeConfirm      = 3; // <3> 充电记录确认数据
+        static final int ChargeAfterMoney   = 4; // <4> 充电扣款后下行数据
+        static final int TradeRandom        = 5; // <5> 交易取随机数下行数据
+        static final int FeeModel           = 6; // <6> 下发计费模型下行数据
+        static final int TwowayAuthRandom   = 7; // <7> 双向认证中运营管理系统下发随机数下行数据
+        static final int TwowayAuthData     = 8; // <8> 双向认证中运营管理系统下发认证数据下行数据
+        static final int KeyUpdateCommand   = 9; // <9> 密钥更新命令下行数据
+        static final int Key1Update         = 10; // <10> 密钥更新中密钥文件1下发下行数据
+        static final int Key2Update         = 11; // <11> 密钥更新中密钥文件2下发下行数据
+        static final int RemoteStart        = 12; // <12> 远程启动充电
+        static final int RemoteStop         = 13; // <13> 远程终止充电
+        static final int PowerControl       = 14; // <14> 远程功率控制
+        static final int SoftUpdate         = 15; // <15> 远程升级启动
+        static final int ChargingDataResult = 16; // <16> 充电过程中上传确认数据
+        static final int ChargingReportSet  = 17; // <17> 充电设备数据上报参数设置
+    }
+
+    private class TYPE1 {
+
+        byte spi = 0;
+
+        TYPE1(byte data, int infoaddr) {
+            spi = (byte) (data & 0x01);
+
+        }
+    }
+
+    private class TYPE11 {
+
+        byte qds = 0;
+        int  value;
+
+        TYPE11(byte[] data, int from, int addr) {
+            value = ProtocolUtils.byteToShort(data[from + 1], data[from]);
+            qds = (byte) data[from + 2];
+        }
+    }
+
+    private class TYPE15 {
+
+        boolean bInValid = false;
+        int     value;
+
+        TYPE15(byte[] data, int from, int addr) {
+            value = ProtocolUtils.byteToShort(data[from + 1], data[from]) + ProtocolUtils.byteToShort(data[from + 3], data[from + 2]) * 0x10000;
+            bInValid = (data[from + 4] & 0x80) == 0 ? false : true;
+        }
+    }
+
+    private class TYPE132 {
+
+        byte   qds = 0;
+        byte[] value;
+        int    len = 0;
+
+        TYPE132(byte[] data, int from, int addr) {
+            len = ProtocolUtils.Unsignd(data[from]);
+            value = new byte[len];
+            System.arraycopy(data, from + 1, value, 0, len);
+            qds = (byte) data[from + 1 + len];
+        }
+    }
+
+    private class TYPE134 {
+
+        int     len = 0;
+        int     type;
+        BizBase value;
+
+        TYPE134(byte[] data, int from, int addr) {
+            type = ProtocolUtils.Unsignd(data[from]);
+            switch (type) {
+                case 1:
+                    value = new BizACPileMonitor(data, from + 1);
+                    break;
+                case 2:
+                    value = new BizDCPileMonitor(data, from + 1);
+                    break;
+            }
+            if (value != null) {
+                len += value.len;
+            }
+        }
+    }
+
+    private class TYPE130 {
+
+        int     len = 0;
+        int     type;
+        BizBase value;
+
+        TYPE130(byte[] data, int from, int addr) {
+            type = ProtocolUtils.Unsignd(data[from]);
+            switch (type) {
+                case 1:
+                    value = new BizUpAuth(data, from + 1);
+                    break;
+                case 2:
+                    value = new BizUpChargeRec(data, from + 1);
+                    break;
+                case 3:
+                    value = new BizUpTradeRandom(data, from + 1);
+                    break;
+                case 4:
+                    value = new BizUpReqFeeModel(data, from + 1);
+                    break;
+                case 5:
+                    value = new BizUpResultFeeModel(data, from + 1);
+                    break;
+                case 6:
+                    value = new BizUpTwowayAuthStart(data, from + 1);
+                    break;
+                case 7:
+                    value = new BizUpTwowayAuthData(data, from + 1);
+                    break;
+                case 8:
+                    value = new BizUpKeyUpdateBase(data, from + 1);
+                    break;
+                case 9:
+                    value = new BizUpKey1UpdateResult(data, from + 1);
+                    break;
+                case 10:
+                    value = new BizUpKey2UpdateResult(data, from + 1);
+                    break;
+                case 11:
+                    value = new BizUpBlackListResult(data, from + 1);
+                    break;
+                case 12:
+                    value = new BizUpTwowayAuthResult(data, from + 1);
+                    break;
+                case 13:
+                    value = new BizUpRemoteStartResult(data, from + 1);
+                    break;
+                case 14:
+                    value = new BizUpRemoteStopResult(data, from + 1);
+                    break;
+                case 15:
+                    value = new BizUpPowerControlResult(data, from + 1);
+                    break;
+                case 16:
+                    value = new BizUpSoftUpdateResult(data, from + 1);
+                    break;
+                case 17:
+                    value = new BizUpChargingData(data, from + 1);
+                    break;
+                case 18:
+                    value = new BizUpChargingDataSetResult(data, from + 1);
+                    break;
+            }
+            if (value != null) {
+                len += value.len;
+            }
+        }
+    }
+
+    // -----------------------------------
+    private abstract class BizDownBase {
+
+        int    type;
+        String devcode;
+        int    chargeInterface = 0;
+
+        public BizDownBase(PileService pileService, int type) {
+            devcode = pileService.getPile().getComAddr();
+            this.type = type;
+            if (pileService.getPile().getComSubAddr() != null) {
+                chargeInterface = Integer.parseInt(pileService.getPile().getComSubAddr());
+            }
+        }
+
+        public abstract byte[] toByte();
+    }
+
+    // 黑名单下发时下行数据
+    private class BizDownBlackList extends BizDownBase {
+
+        String   timeStampNo;
+        int      blackListNum = 4;
+        String[] cardNo       = { "1122334455667788", "0022334455667788", "1100334455667788", "1122004455667788" };
+        int[]    cardStatus   = { 1, 2, 1, 2 };
+
+        public BizDownBlackList(PileService pileService, String timeStampNo) {
+            super(pileService, BizTypeDown.BlackList);
+            this.timeStampNo = timeStampNo;
+        }
+
+        @Override
+        public byte[] toByte() {
+            byte[] data = new byte[512];
+            int index = 0;
+            System.arraycopy(ProtocolUtils.StringToHex(devcode, 8), 0, data, 0, 8);
+            index += 8;
+            data[index++] = (byte) (chargeInterface & 0xFF);
+            System.arraycopy(ProtocolUtils.StringToHex(timeStampNo, 9), 0, data, 0, 9);
+            index += 9;
+            // TODO
+            byte[] res = new byte[index];
+            System.arraycopy(data, 0, res, 0, index);
+            return res;
+        }
+    }
+
+    // 充电鉴权下行数据
+    private class BizDownAuth extends BizDownBase {
+
+        String  cardNo;
+        String  carId       = "11223344556677881122334455667788";
+        String  feeModelId  = "1122334455667788";
+        double  afterMoney  = 100.10;                            // 账号余额
+        boolean isSuccess   = true;
+        String  authError;
+        double  afterMiles  = 100.11;
+        double  chargeElec  = 100.12;
+        double  remainTimes = 100.13;
+
+        public BizDownAuth(PileService pileService, String cardNo) {
+            super(pileService, BizTypeDown.Auth);
+            this.cardNo = cardNo;
+
+            if (isSuccess) {
+                authError = "0000";
+            }
+        }
+
+        @Override
+        public byte[] toByte() {
+            byte[] data = new byte[512];
+            int index = 0;
+            System.arraycopy(ProtocolUtils.StringToHex(devcode, 8), 0, data, 0, 8);
+            index += 8;
+            data[index++] = (byte) (chargeInterface & 0xFF);
+            System.arraycopy(ProtocolUtils.StringToHex(cardNo, 8), 0, data, 0, 8);
+            index += 8;
+            System.arraycopy(ProtocolUtils.StringToHex(carId, 32), 0, data, 0, 32);
+            index += 32;
+            System.arraycopy(ProtocolUtils.StringToHex(feeModelId, 8), 0, data, 0, 8);
+            index += 8;
+            data[index++]=(byte)((new BigDecimal(afterMoney+"").multiply(new BigDecimal("100")).intValue())&0xFF);
+			data[index++]=(byte)((new BigDecimal(afterMoney+"").multiply(new BigDecimal("100")).intValue()>>8)&0xFF);
+			data[index++]=(byte)((new BigDecimal(afterMoney+"").multiply(new BigDecimal("100")).intValue()>>16)&0xFF);
+			data[index++]=(byte)((new BigDecimal(afterMoney+"").multiply(new BigDecimal("100")).intValue()>>24)&0xFF);
+            data[index++] = (byte) (isSuccess ? 1 : 0);
+            System.arraycopy(ProtocolUtils.StringToHex(authError, 2), 0, data, 0, 2);
+            index += 2;
+            data[index++]=(byte)((new BigDecimal(afterMiles+"").multiply(new BigDecimal("100")).intValue())&0xFF);
+			data[index++]=(byte)((new BigDecimal(afterMiles+"").multiply(new BigDecimal("100")).intValue()>>8)&0xFF);
+			data[index++]=(byte)((new BigDecimal(afterMiles+"").multiply(new BigDecimal("100")).intValue()>>16)&0xFF);
+			data[index++]=(byte)((new BigDecimal(afterMiles+"").multiply(new BigDecimal("100")).intValue()>>24)&0xFF);
+			data[index++]=(byte)((new BigDecimal(chargeElec+"").multiply(new BigDecimal("100")).intValue())&0xFF);
+			data[index++]=(byte)((new BigDecimal(chargeElec+"").multiply(new BigDecimal("100")).intValue()>>8)&0xFF);
+			data[index++]=(byte)((new BigDecimal(chargeElec+"").multiply(new BigDecimal("100")).intValue()>>16)&0xFF);
+			data[index++]=(byte)((new BigDecimal(chargeElec+"").multiply(new BigDecimal("100")).intValue()>>24)&0xFF);
+			data[index++]=(byte)((new BigDecimal(remainTimes+"").multiply(new BigDecimal("100")).intValue())&0xFF);
+			data[index++]=(byte)((new BigDecimal(remainTimes+"").multiply(new BigDecimal("100")).intValue()>>8)&0xFF);
+			data[index++]=(byte)((new BigDecimal(remainTimes+"").multiply(new BigDecimal("100")).intValue()>>16)&0xFF);
+			data[index++]=(byte)((new BigDecimal(remainTimes+"").multiply(new BigDecimal("100")).intValue()>>24)&0xFF);
+            byte[] res = new byte[index];
+            System.arraycopy(data, 0, res, 0, index);
+            return res;
+        }
+    }
+
+    // 充电记录确认数据
+    private class BizDownChargeConfirm extends BizDownBase {
+
+        int isSuccess;
+
+        public BizDownChargeConfirm(PileService pileService) {
+            super(pileService, BizTypeDown.ChargeConfirm);
+            isSuccess = 0;
+        }
+
+        @Override
+        public byte[] toByte() {
+            byte[] data = new byte[512];
+            int index = 0;
+            System.arraycopy(ProtocolUtils.StringToHex(devcode, 8), 0, data, 0, 8);
+            index += 8;
+            data[index++] = (byte) (chargeInterface & 0xFF);
+            data[index++] = (byte) (isSuccess & 0xFF);
+            byte[] res = new byte[index];
+            System.arraycopy(data, 0, res, 0, index);
+            return res;
+        }
+
+    }
+
+    // 充电扣款后下行数据
+    private class BizDownChargeAfterMoney extends BizDownBase {
+
+        String  cardNo      = "1122334455667788";
+        double  deductMoney = 30.32;
+        double  afterMoney  = 20.25;             // 账号余额
+        boolean isDeduct    = true;
+        String  deductError = "0000";
+        double  deductMiles = 10.01;
+        double  afterMiles  = 12.32;
+        double  deductElec  = 5.12;
+        double  afterElec   = 8.96;
+        double  deductTimes = 8.10;
+        double  afterTimes  = 9.60;
+
+        public BizDownChargeAfterMoney(PileService pileService) {
+            super(pileService, BizTypeDown.ChargeAfterMoney);
+            // TODO Auto-generated constructor stub
+        }
+
+        @Override
+        public byte[] toByte() {
+            byte[] data = new byte[512];
+            int index = 0;
+            System.arraycopy(ProtocolUtils.StringToHex(devcode, 8), 0, data, 0, 8);
+            index += 8;
+            data[index++] = (byte) (chargeInterface & 0xFF);
+            System.arraycopy(ProtocolUtils.StringToHex(cardNo, 16), 0, data, 0, 16);
+            index += 16;
+            data[index++]=(byte)((new BigDecimal(deductMoney+"").multiply(new BigDecimal("100")).intValue())&0xFF);
+			data[index++]=(byte)((new BigDecimal(deductMoney+"").multiply(new BigDecimal("100")).intValue()>>8)&0xFF);
+			data[index++]=(byte)((new BigDecimal(deductMoney+"").multiply(new BigDecimal("100")).intValue()>>16)&0xFF);
+			data[index++]=(byte)((new BigDecimal(deductMoney+"").multiply(new BigDecimal("100")).intValue()>>24)&0xFF);
+            
+            data[index++]=(byte)((new BigDecimal(afterMoney+"").multiply(new BigDecimal("100")).intValue())&0xFF);
+			data[index++]=(byte)((new BigDecimal(afterMoney+"").multiply(new BigDecimal("100")).intValue()>>8)&0xFF);
+			data[index++]=(byte)((new BigDecimal(afterMoney+"").multiply(new BigDecimal("100")).intValue()>>16)&0xFF);
+			data[index++]=(byte)((new BigDecimal(afterMoney+"").multiply(new BigDecimal("100")).intValue()>>24)&0xFF);
+            data[index++] = (byte) (isDeduct ? 1 : 0);
+            System.arraycopy(ProtocolUtils.StringToHex(deductError, 2), 0, data, 0, 2);
+            index += 2;
+            data[index++]=(byte)((new BigDecimal(deductMiles+"").multiply(new BigDecimal("100")).intValue())&0xFF);
+			data[index++]=(byte)((new BigDecimal(deductMiles+"").multiply(new BigDecimal("100")).intValue()>>8)&0xFF);
+			data[index++]=(byte)((new BigDecimal(deductMiles+"").multiply(new BigDecimal("100")).intValue()>>16)&0xFF);
+			data[index++]=(byte)((new BigDecimal(deductMiles+"").multiply(new BigDecimal("100")).intValue()>>24)&0xFF);
+			
+			data[index++]=(byte)((new BigDecimal(afterMiles+"").multiply(new BigDecimal("100")).intValue())&0xFF);
+			data[index++]=(byte)((new BigDecimal(afterMiles+"").multiply(new BigDecimal("100")).intValue()>>8)&0xFF);
+			data[index++]=(byte)((new BigDecimal(afterMiles+"").multiply(new BigDecimal("100")).intValue()>>16)&0xFF);
+			data[index++]=(byte)((new BigDecimal(afterMiles+"").multiply(new BigDecimal("100")).intValue()>>24)&0xFF);
+			
+			data[index++]=(byte)((new BigDecimal(deductElec+"").multiply(new BigDecimal("100")).intValue())&0xFF);
+			data[index++]=(byte)((new BigDecimal(deductElec+"").multiply(new BigDecimal("100")).intValue()>>8)&0xFF);
+			data[index++]=(byte)((new BigDecimal(deductElec+"").multiply(new BigDecimal("100")).intValue()>>16)&0xFF);
+			data[index++]=(byte)((new BigDecimal(deductElec+"").multiply(new BigDecimal("100")).intValue()>>24)&0xFF);
+			
+			//data[index++]=(byte)((int)(afterElec*100)&0xFF);
+			data[index++]=(byte)((new BigDecimal(afterElec+"").multiply(new BigDecimal("100")).intValue())&0xFF);
+			data[index++]=(byte)((new BigDecimal(afterElec+"").multiply(new BigDecimal("100")).intValue()>>8)&0xFF);
+			data[index++]=(byte)((new BigDecimal(afterElec+"").multiply(new BigDecimal("100")).intValue()>>16)&0xFF);
+			data[index++]=(byte)((new BigDecimal(afterElec+"").multiply(new BigDecimal("100")).intValue()>>24)&0xFF);
+			
+			//data[index++]=(byte)((int)(deductTimes*100)&0xFF);
+			data[index++]=(byte)((new BigDecimal(deductTimes+"").multiply(new BigDecimal("100")).intValue())&0xFF);
+			data[index++]=(byte)((new BigDecimal(deductTimes+"").multiply(new BigDecimal("100")).intValue()>>8)&0xFF);
+			data[index++]=(byte)((new BigDecimal(deductTimes+"").multiply(new BigDecimal("100")).intValue()>>16)&0xFF);
+			data[index++]=(byte)((new BigDecimal(deductTimes+"").multiply(new BigDecimal("100")).intValue()>>24)&0xFF);
+
+            data[index++]=(byte)((new BigDecimal(afterTimes+"").multiply(new BigDecimal("100")).intValue())&0xFF);
+			data[index++]=(byte)((new BigDecimal(afterTimes+"").multiply(new BigDecimal("100")).intValue()>>8)&0xFF);
+			data[index++]=(byte)((new BigDecimal(afterTimes+"").multiply(new BigDecimal("100")).intValue()>>16)&0xFF);
+			data[index++]=(byte)((new BigDecimal(afterTimes+"").multiply(new BigDecimal("100")).intValue()>>24)&0xFF);
+            byte[] res = new byte[index];
+            System.arraycopy(data, 0, res, 0, index);
+            return res;
+        }
+
+    }
+
+    // 交易取随机数下行数据
+    private class BizDownTradeRandom extends BizDownBase {
+
+        String randomNo;
+
+        public BizDownTradeRandom(PileService pileService, String randomNo) {
+            super(pileService, BizTypeDown.TradeRandom);
+            this.randomNo = randomNo;
+        }
+
+        @Override
+        public byte[] toByte() {
+            byte[] data = new byte[512];
+            int index = 0;
+            System.arraycopy(ProtocolUtils.StringToHex(devcode, 8), 0, data, 0, 8);
+            index += 8;
+            data[index++] = (byte) (chargeInterface & 0xFF);
+            System.arraycopy(ProtocolUtils.StringToHex(randomNo, 8), 0, data, 0, 8);
+            index += 8;
+            byte[] res = new byte[index];
+            System.arraycopy(data, 0, res, 0, index);
+            return res;
+        }
+    }
+
+    // 下发计费模型下行数据
+    private class BizDownFeeModel extends BizDownBase {
+
+        String   feeModelId    = "1122334455667788";
+        Calendar startTime;
+        Calendar endTime;
+        String   performStatus = "0001";
+        String   metType       = "0001";
+        int      periodNum     = 2;
+
+        int[]    periodStart   = { 0, 12 };
+        int[]    periodType    = { 4, 2 };
+        double   jianPrice     = 10.00001;          // 尖单价
+        double   peakPrice     = 10.00002;
+        double   flatPrice     = 10.00003;
+        double   valleyPrice   = 10.00004;
+        double   chargePrice   = 10.00005;          // 充电服务费单价
+        double   bookPrice     = 10.00006;          // 预约费单价
+        double   parkPrice     = 10.00007;          // 停车费单价
+
+        public BizDownFeeModel(PileService pileService, PileFeeModel pfm) {
+            super(pileService, BizTypeDown.FeeModel);
+            // if (pfm != null) {
+            // feeModelId = pfm.getChargeruleId();
+            // startTime = Calendar.getInstance();
+            // startTime.setTime(pfm.getActiveTime());
+            // endTime = Calendar.getInstance();
+            // endTime.set(Calendar.YEAR, 2050);
+            // feeType = pfm.getChargeruleId() == 1 ? 0 : 1;
+            // if (feeType == 0) {
+            // singlePrice = (int) (pfm.getChargeFee().doubleValue() * 100);
+            // } else {
+            // jianPrice = (int) (pfm.getFeeModel().getJianFee().doubleValue());
+            // peakPrice = (int) (pfm.getFeeModel().getFengFee().doubleValue() );
+            // flatPrice = (int) (pfm.getFeeModel().getPingFee().doubleValue() );
+            // valleyPrice = (int) (pfm.getFeeModel().getGuFee().doubleValue());
+            // }
+            // chargePrice = (int) (pfm.getServiceFee().doubleValue());
+            // }
+        }
+
+        @Override
+        public byte[] toByte() {
+            byte[] data = new byte[512];
+            int index = 0;
+            System.arraycopy(ProtocolUtils.StringToHex(devcode, 8), 0, data, 0, 8);
+            index += 8;
+            data[index++] = (byte) (chargeInterface & 0xFF);
+            System.arraycopy(ProtocolUtils.StringToHex(feeModelId, 8), 0, data, 0, 8);
+            index += 8;
+            System.arraycopy(cp56time2a.toByte(startTime), 0, data, index, 7);
+            index += 7;
+            System.arraycopy(cp56time2a.toByte(endTime), 0, data, index, 7);
+            index += 7;
+            System.arraycopy(ProtocolUtils.StringToHex(performStatus, 2), 0, data, 0, 2);
+            index += 2;
+            System.arraycopy(ProtocolUtils.StringToHex(metType, 2), 0, data, 0, 2);
+            index += 2;
+            data[index++]=(byte)((new BigDecimal(jianPrice+"").multiply(new BigDecimal("100000")).intValue())&0xFF);
+			data[index++]=(byte)((new BigDecimal(jianPrice+"").multiply(new BigDecimal("100000")).intValue()>>8)&0xFF);
+			data[index++]=(byte)((new BigDecimal(jianPrice+"").multiply(new BigDecimal("100000")).intValue()>>16)&0xFF);
+			data[index++]=(byte)((new BigDecimal(jianPrice+"").multiply(new BigDecimal("100000")).intValue()>>24)&0xFF);
+			data[index++]=(byte)((new BigDecimal(peakPrice+"").multiply(new BigDecimal("100000")).intValue())&0xFF);
+			data[index++]=(byte)((new BigDecimal(peakPrice+"").multiply(new BigDecimal("100000")).intValue()>>8)&0xFF);
+			data[index++]=(byte)((new BigDecimal(peakPrice+"").multiply(new BigDecimal("100000")).intValue()>>16)&0xFF);
+			data[index++]=(byte)((new BigDecimal(peakPrice+"").multiply(new BigDecimal("100000")).intValue()>>24)&0xFF);
+			
+			data[index++]=(byte)((new BigDecimal(flatPrice+"").multiply(new BigDecimal("100000")).intValue())&0xFF);
+			data[index++]=(byte)((new BigDecimal(flatPrice+"").multiply(new BigDecimal("100000")).intValue()>>8)&0xFF);
+			data[index++]=(byte)((new BigDecimal(flatPrice+"").multiply(new BigDecimal("100000")).intValue()>>16)&0xFF);
+			data[index++]=(byte)((new BigDecimal(flatPrice+"").multiply(new BigDecimal("100000")).intValue()>>24)&0xFF);
+			
+			data[index++]=(byte)((new BigDecimal(valleyPrice+"").multiply(new BigDecimal("100000")).intValue())&0xFF);
+			data[index++]=(byte)((new BigDecimal(valleyPrice+"").multiply(new BigDecimal("100000")).intValue()>>8)&0xFF);
+			data[index++]=(byte)((new BigDecimal(valleyPrice+"").multiply(new BigDecimal("100000")).intValue()>>16)&0xFF);
+			data[index++]=(byte)((new BigDecimal(valleyPrice+"").multiply(new BigDecimal("100000")).intValue()>>24)&0xFF);
+			
+			data[index++]=(byte)((new BigDecimal(chargePrice+"").multiply(new BigDecimal("100000")).intValue())&0xFF);
+			data[index++]=(byte)((new BigDecimal(chargePrice+"").multiply(new BigDecimal("100000")).intValue()>>8)&0xFF);
+			data[index++]=(byte)((new BigDecimal(chargePrice+"").multiply(new BigDecimal("100000")).intValue()>>16)&0xFF);
+			data[index++]=(byte)((new BigDecimal(chargePrice+"").multiply(new BigDecimal("100000")).intValue()>>24)&0xFF);
+			
+			data[index++]=(byte)((new BigDecimal(bookPrice+"").multiply(new BigDecimal("100000")).intValue())&0xFF);
+			data[index++]=(byte)((new BigDecimal(bookPrice+"").multiply(new BigDecimal("100000")).intValue()>>8)&0xFF);
+			data[index++]=(byte)((new BigDecimal(bookPrice+"").multiply(new BigDecimal("100000")).intValue()>>16)&0xFF);
+			data[index++]=(byte)((new BigDecimal(bookPrice+"").multiply(new BigDecimal("100000")).intValue()>>24)&0xFF);
+			
+			data[index++]=(byte)((new BigDecimal(parkPrice+"").multiply(new BigDecimal("100000")).intValue())&0xFF);
+			data[index++]=(byte)((new BigDecimal(parkPrice+"").multiply(new BigDecimal("100000")).intValue()>>8)&0xFF);
+			data[index++]=(byte)((new BigDecimal(parkPrice+"").multiply(new BigDecimal("100000")).intValue()>>16)&0xFF);
+			data[index++]=(byte)((new BigDecimal(parkPrice+"").multiply(new BigDecimal("100000")).intValue()>>24)&0xFF);
+            byte[] res = new byte[index];
+            System.arraycopy(data, 0, res, 0, index);
+            return res;
+        }
+
+    }
+
+    // 双向认证中运营管理系统下发随机数下行数据
+    private class BizDownTwowayAuthRandom extends BizDownBase {
+
+        String randomNo;
+
+        public BizDownTwowayAuthRandom(PileService pileService, String randomNo) {
+            super(pileService, BizTypeDown.TwowayAuthRandom);
+            this.randomNo = randomNo;
+        }
+
+        @Override
+        public byte[] toByte() {
+            byte[] data = new byte[512];
+            int index = 0;
+            System.arraycopy(ProtocolUtils.StringToHex(devcode, 8), 0, data, 0, 8);
+            index += 8;
+            data[index++] = (byte) (chargeInterface & 0xFF);
+            System.arraycopy(ProtocolUtils.StringToHex(randomNo, 8), 0, data, 0, 8);
+            index += 8;
+            byte[] res = new byte[index];
+            System.arraycopy(data, 0, res, 0, index);
+            return res;
+        }
+    }
+
+    // 双向认证中运营管理系统下发认证数据下行数据
+    private class BizDownTwowayAuthData extends BizDownBase {
+
+        int    isSuccess = 0;
+        String authCode;
+
+        public BizDownTwowayAuthData(PileService pileService, String sysAuthCode) {
+            super(pileService, BizTypeDown.TwowayAuthData);
+            authCode = sysAuthCode;
+        }
+
+        @Override
+        public byte[] toByte() {
+            byte[] data = new byte[512];
+            int index = 0;
+            System.arraycopy(ProtocolUtils.StringToHex(devcode, 8), 0, data, 0, 8);
+            index += 8;
+            data[index++] = (byte) (chargeInterface & 0xFF);
+            data[index++] = (byte) (isSuccess & 0xFF);
+            System.arraycopy(ProtocolUtils.StringToHex(authCode, 8), 0, data, 0, 8);
+            index += 8;
+            byte[] res = new byte[index];
+            System.arraycopy(data, 0, res, 0, index);
+            return res;
+        }
+    }
+
+    // 密钥更新命令下行数据
+    private class BizDownKeyUpdateCommand extends BizDownBase {
+
+        String updateCommand;
+
+        public BizDownKeyUpdateCommand(PileService pileService, String updateCommand) {
+            super(pileService, BizTypeDown.KeyUpdateCommand);
+            this.updateCommand = updateCommand;
+        }
+
+        @Override
+        public byte[] toByte() {
+            byte[] data = new byte[512];
+            int index = 0;
+            System.arraycopy(ProtocolUtils.StringToHex(devcode, 8), 0, data, 0, 8);
+            index += 8;
+            data[index++] = (byte) (chargeInterface & 0xFF);
+            System.arraycopy(ProtocolUtils.StringToHex(updateCommand, 2), 0, data, 0, 2);
+            index += 2;
+            byte[] res = new byte[index];
+            System.arraycopy(data, 0, res, 0, index);
+            return res;
+        }
+    }
+
+    // 密钥更新中密钥文件1下发下行数据
+    private class BizDownKey1Update extends BizDownBase {
+
+        String keyData;
+
+        public BizDownKey1Update(PileService pileService, String key1Data) {
+            super(pileService, BizTypeDown.Key1Update);
+            keyData = key1Data;
+        }
+
+        @Override
+        public byte[] toByte() {
+            byte[] data = new byte[512];
+            int index = 0;
+            System.arraycopy(ProtocolUtils.StringToHex(devcode, 8), 0, data, 0, 8);
+            index += 8;
+            data[index++] = (byte) (chargeInterface & 0xFF);
+            System.arraycopy(ProtocolUtils.StringToHex(keyData, 110), 0, data, 0, 110);
+            index += 110;
+            byte[] res = new byte[index];
+            System.arraycopy(data, 0, res, 0, index);
+            return res;
+        }
+    }
+
+    // 密钥更新中密钥文件2下发下行数据
+    private class BizDownKey2Update extends BizDownBase {
+
+        String keyData;
+
+        public BizDownKey2Update(PileService pileService, String key2Data) {
+            super(pileService, BizTypeDown.Key2Update);
+            keyData = key2Data;
+        }
+
+        @Override
+        public byte[] toByte() {
+            byte[] data = new byte[512];
+            int index = 0;
+            System.arraycopy(ProtocolUtils.StringToHex(devcode, 8), 0, data, 0, 8);
+            index += 8;
+            data[index++] = (byte) (chargeInterface & 0xFF);
+            System.arraycopy(ProtocolUtils.StringToHex(keyData, 110), 0, data, 0, 110);
+            index += 110;
+            byte[] res = new byte[index];
+            System.arraycopy(data, 0, res, 0, index);
+            return res;
+        }
+    }
+
+    // 远程启动充电
+    private class BizDownRemoteStart extends BizDownBase {
+
+        // String remoteStart;
+        String userID;        // 预约账号，手机号码
+        int    chargeType = 1; // 00 自动；01 按电量；02 按时间； 03 按金额
+        int    value      = 0; // 预充金额
+
+        public BizDownRemoteStart(PileService pileService, MsgChargeStart msgChargeStart) {
+            super(pileService, BizTypeDown.RemoteStart);
+            userID = pileService.getUserInfo(msgChargeStart.getUserID()).getPhone();
+            chargeType = msgChargeStart.getChargeMode();
+            value = msgChargeStart.getValue();
+        }
+
+        @Override
+        public byte[] toByte() {
+            byte[] data = new byte[512];
+            int index = 0;
+            System.arraycopy(ProtocolUtils.StringToHex(devcode, 8), 0, data, 0, 8);
+            index += 8;
+            data[index++] = (byte) (chargeInterface & 0xFF);
+            System.arraycopy(ProtocolUtils.StringToHex(userID, 8), 0, data, 0, 8);
+            index += 8;
+            data[index++] = (byte) (chargeType & 0xFF);
+            data[index++] = (byte) (value & 0xFF);
+            data[index++] = (byte) ((value >> 8) & 0xFF);
+            data[index++] = (byte) ((value >> 16) & 0xFF);
+            byte[] res = new byte[index];
+            System.arraycopy(data, 0, res, 0, index);
+            return res;
+        }
+    }
+
+    // 远程终止充电
+    private class BizDownRemoteStop extends BizDownBase {
+
+        String remoteStop;
+
+        public BizDownRemoteStop(PileService pileService, MsgChargeStop msgChargeStop) {
+            super(pileService, BizTypeDown.RemoteStop);
+            remoteStop = pileService.getUserInfo(msgChargeStop.getUserID()).getPhone();
+        }
+
+        @Override
+        public byte[] toByte() {
+            byte[] data = new byte[512];
+            int index = 0;
+            System.arraycopy(ProtocolUtils.StringToHex(devcode, 8), 0, data, 0, 8);
+            index += 8;
+            data[index++] = (byte) (chargeInterface & 0xFF);
+            System.arraycopy(ProtocolUtils.StringToHex(remoteStop, 8), 0, data, 0, 8);
+            index += 8;
+            byte[] res = new byte[index];
+            System.arraycopy(data, 0, res, 0, index);
+            return res;
+        }
+    }
+
+    // 远程功率控制
+    private class BizDownPowerControl extends BizDownBase {
+
+        String   powerParame;
+        Calendar endTime;
+
+        public BizDownPowerControl(PileService pileService, String powerParame, Calendar endTime) {
+            super(pileService, BizTypeDown.PowerControl);
+            this.powerParame = powerParame;
+            this.endTime = endTime;
+        }
+
+        @Override
+        public byte[] toByte() {
+            byte[] data = new byte[512];
+            int index = 0;
+            System.arraycopy(ProtocolUtils.StringToHex(devcode, 8), 0, data, 0, 8);
+            index += 8;
+            data[index++] = (byte) (chargeInterface & 0xFF);
+            System.arraycopy(ProtocolUtils.StringToHex(powerParame, 2), 0, data, 0, 2);
+            index += 2;
+            System.arraycopy(cp56time2a.toByte(endTime), 0, data, index, 7);
+            index += 7;
+            byte[] res = new byte[index];
+            System.arraycopy(data, 0, res, 0, index);
+            return res;
+        }
+    }
+
+    // 远程升级启动
+    private class BizDownSoftUpdate extends BizDownBase {
+
+        String softUpdate;
+
+        public BizDownSoftUpdate(PileService pileService, String softUpdate) {
+            super(pileService, BizTypeDown.SoftUpdate);
+            this.softUpdate = softUpdate;
+        }
+
+        @Override
+        public byte[] toByte() {
+            byte[] data = new byte[512];
+            int index = 0;
+            System.arraycopy(ProtocolUtils.StringToHex(devcode, 8), 0, data, 0, 8);
+            index += 8;
+            data[index++] = (byte) (chargeInterface & 0xFF);
+            System.arraycopy(ProtocolUtils.StringToHex(softUpdate, 156), 0, data, 0, 156);
+            index += 156;
+            byte[] res = new byte[index];
+            System.arraycopy(data, 0, res, 0, index);
+            return res;
+        }
+    }
+
+    // 充电过程中上传确认数据
+    private class BizDownChargingDataResult extends BizDownBase {
+
+        String  cardNo;
+        double  deductMoney;        // 扣款金额
+        double  afterMoney;         // 账号余额
+        boolean isDeduct;
+        String  deductError;
+
+        double  deductMiles = 10.01;
+        double  afterMiles  = 12.32;
+        double  deductElec  = 5.12;
+        double  afterElec   = 8.96;
+        double  deductTimes = 8.10;
+        double  afterTimes  = 9.60;
+
+        public BizDownChargingDataResult(PileService pileService) {
+            super(pileService, BizTypeDown.ChargingDataResult);
+            // TODO Auto-generated constructor stub
+            if (isDeduct) {
+                deductError = "0000";
+            }
+        }
+
+        @Override
+        public byte[] toByte() {
+            byte[] data = new byte[512];
+            int index = 0;
+            System.arraycopy(ProtocolUtils.StringToHex(devcode, 8), 0, data, 0, 8);
+            index += 8;
+            data[index++] = (byte) (chargeInterface & 0xFF);
+            System.arraycopy(ProtocolUtils.StringToHex(cardNo, 16), 0, data, 0, 16);
+            index += 16;
+            data[index++]=(byte)((new BigDecimal(deductMoney+"").multiply(new BigDecimal("100")).intValue())&0xFF);
+			data[index++]=(byte)((new BigDecimal(deductMoney+"").multiply(new BigDecimal("100")).intValue()>>8)&0xFF);
+			data[index++]=(byte)((new BigDecimal(deductMoney+"").multiply(new BigDecimal("100")).intValue()>>16)&0xFF);
+			data[index++]=(byte)((new BigDecimal(deductMoney+"").multiply(new BigDecimal("100")).intValue()>>24)&0xFF);
+            
+            data[index++]=(byte)((new BigDecimal(afterMoney+"").multiply(new BigDecimal("100")).intValue())&0xFF);
+			data[index++]=(byte)((new BigDecimal(afterMoney+"").multiply(new BigDecimal("100")).intValue()>>8)&0xFF);
+			data[index++]=(byte)((new BigDecimal(afterMoney+"").multiply(new BigDecimal("100")).intValue()>>16)&0xFF);
+			data[index++]=(byte)((new BigDecimal(afterMoney+"").multiply(new BigDecimal("100")).intValue()>>24)&0xFF);
+            data[index++] = (byte) (isDeduct ? 1 : 0);
+            System.arraycopy(ProtocolUtils.StringToHex(deductError, 2), 0, data, 0, 2);
+            index += 2;
+            data[index++]=(byte)((new BigDecimal(deductMiles+"").multiply(new BigDecimal("100")).intValue())&0xFF);
+			data[index++]=(byte)((new BigDecimal(deductMiles+"").multiply(new BigDecimal("100")).intValue()>>8)&0xFF);
+			data[index++]=(byte)((new BigDecimal(deductMiles+"").multiply(new BigDecimal("100")).intValue()>>16)&0xFF);
+			data[index++]=(byte)((new BigDecimal(deductMiles+"").multiply(new BigDecimal("100")).intValue()>>24)&0xFF);
+			
+			data[index++]=(byte)((new BigDecimal(afterMiles+"").multiply(new BigDecimal("100")).intValue())&0xFF);
+			data[index++]=(byte)((new BigDecimal(afterMiles+"").multiply(new BigDecimal("100")).intValue()>>8)&0xFF);
+			data[index++]=(byte)((new BigDecimal(afterMiles+"").multiply(new BigDecimal("100")).intValue()>>16)&0xFF);
+			data[index++]=(byte)((new BigDecimal(afterMiles+"").multiply(new BigDecimal("100")).intValue()>>24)&0xFF);
+			
+			data[index++]=(byte)((new BigDecimal(deductElec+"").multiply(new BigDecimal("100")).intValue())&0xFF);
+			data[index++]=(byte)((new BigDecimal(deductElec+"").multiply(new BigDecimal("100")).intValue()>>8)&0xFF);
+			data[index++]=(byte)((new BigDecimal(deductElec+"").multiply(new BigDecimal("100")).intValue()>>16)&0xFF);
+			data[index++]=(byte)((new BigDecimal(deductElec+"").multiply(new BigDecimal("100")).intValue()>>24)&0xFF);
+			
+			//data[index++]=(byte)((int)(afterElec*100)&0xFF);
+			data[index++]=(byte)((new BigDecimal(afterElec+"").multiply(new BigDecimal("100")).intValue())&0xFF);
+			data[index++]=(byte)((new BigDecimal(afterElec+"").multiply(new BigDecimal("100")).intValue()>>8)&0xFF);
+			data[index++]=(byte)((new BigDecimal(afterElec+"").multiply(new BigDecimal("100")).intValue()>>16)&0xFF);
+			data[index++]=(byte)((new BigDecimal(afterElec+"").multiply(new BigDecimal("100")).intValue()>>24)&0xFF);
+			
+			//data[index++]=(byte)((int)(deductTimes*100)&0xFF);
+			data[index++]=(byte)((new BigDecimal(deductTimes+"").multiply(new BigDecimal("100")).intValue())&0xFF);
+			data[index++]=(byte)((new BigDecimal(deductTimes+"").multiply(new BigDecimal("100")).intValue()>>8)&0xFF);
+			data[index++]=(byte)((new BigDecimal(deductTimes+"").multiply(new BigDecimal("100")).intValue()>>16)&0xFF);
+			data[index++]=(byte)((new BigDecimal(deductTimes+"").multiply(new BigDecimal("100")).intValue()>>24)&0xFF);
+
+			data[index++]=(byte)((new BigDecimal(afterTimes+"").multiply(new BigDecimal("100")).intValue())&0xFF);
+			data[index++]=(byte)((new BigDecimal(afterTimes+"").multiply(new BigDecimal("100")).intValue()>>8)&0xFF);
+			data[index++]=(byte)((new BigDecimal(afterTimes+"").multiply(new BigDecimal("100")).intValue()>>16)&0xFF);
+			data[index++]=(byte)((new BigDecimal(afterTimes+"").multiply(new BigDecimal("100")).intValue()>>24)&0xFF);
+            byte[] res = new byte[index];
+            System.arraycopy(data, 0, res, 0, index);
+            return res;
+        }
+
+    }
+
+    // 充电设备数据上报参数设置
+    private class BizDownChargingReportSet extends BizDownBase {
+
+        int intervalTime;
+        int minintervalTime;
+
+        public BizDownChargingReportSet(PileService pileService, int intervalTime, int minintervalTime) {
+            super(pileService, BizTypeDown.ChargingReportSet);
+            this.intervalTime = intervalTime;
+            this.minintervalTime = minintervalTime;
+        }
+
+        @Override
+        public byte[] toByte() {
+            byte[] data = new byte[512];
+            int index = 0;
+            System.arraycopy(ProtocolUtils.StringToHex(devcode, 8), 0, data, 0, 8);
+            index += 8;
+            data[index++] = (byte) (chargeInterface & 0xFF);
+            data[index++] = (byte) (intervalTime & 0xFF);
+            data[index++] = (byte) ((intervalTime >> 8) & 0xFF);
+            data[index++] = (byte) (minintervalTime & 0xFF);
+            data[index++] = (byte) ((minintervalTime >> 8) & 0xFF);
+            byte[] res = new byte[index];
+            System.arraycopy(data, 0, res, 0, index);
+            return res;
+        }
+    }
+
+    // --------------
+
+    private class BizBase {
+
+        String devcode;
+        int    chargeInterface;
+        int    len = 0;
+
+        BizBase(byte[] data, int from) {
+            devcode = ProtocolUtils.getByteToHexStringDesc(data, from, 8, "");
+            chargeInterface = ProtocolUtils.Unsignd(data[from + 8]);
+            len = 9;
+        }
+    }
+
+    private class BizUpAuth extends BizBase {
+
+        String cardNo;
+        String cardPassword;
+        String inputPassword;
+        double cardMoney;
+        short  cardStatus;
+        String carId;
+        String feeModelId;
+        String payNo;
+        String identipaycardData;
+
+        BizUpAuth(byte[] data, int from) {
+            super(data, from);
+            int index = from + len;
+            cardNo = ProtocolUtils.getByteToHexStringDesc(data, index, 8, "");
+            index += 8;
+            cardPassword = Arrays.copyOfRange(data, index, index + 16).toString();
+            index += 16;
+            inputPassword = Arrays.copyOfRange(data, index, index + 16).toString();
+            cardMoney = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+            index += 4;
+            cardStatus = ProtocolUtils.byteToShort(data[index + 1], data[index]);
+            index += 2;
+            carId = Arrays.copyOfRange(data, index, index + 32).toString();
+            index += 32;
+            feeModelId = ProtocolUtils.getByteToHexStringDesc(data, index, 8, "");
+            index += 8;
+            payNo = ProtocolUtils.getByteToHexStringDesc(data, index, 8, "");
+            index += 8;
+            identipaycardData = ProtocolUtils.getByteToHexStringDesc(data, index, 8, "");
+        }
+
+    }
+
+    private class BizUpChargeRec extends BizBase {
+
+        String   tradeNo;
+        String   payNo;
+        String   CardNo;
+        String   isTimes;
+        Calendar startTime;
+        Calendar endTime;
+        double   jianBegValue;  // 尖起示值
+        double   jianEndValue;  // 尖止示值
+        double   peakBegValue;
+        double   peakEndValue;
+        double   flatBegValue;  // 平起示值
+        double   flatEndValue;
+        double   valleyBegValue; // 谷起示值
+        double   valleyEndValue;
+        String   metType;       // 计量类型
+        double   totalBegValue; // 总起示值
+        double   totalEndValue;
+        double   jianPrice;     // 尖单价
+        double   jianElec;      // 尖电量
+        double   jianMoney;     // 尖金额
+        double   peakPrice;
+        double   peakElec;
+        double   peakMoney;
+        double   flatPrice;
+        double   flatElec;
+        double   flatMoney;
+        double   valleyPrice;
+        double   valleyElec;
+        double   valleyMoney;
+        double   totalElec;     // 总电量
+        String   businessType;
+        double   afterMoney;    // 扣款后钱包余额
+        double   consumPrice;   // 消费单价
+        double   consumMoney;   // 消费金额
+        String   carId;
+        int      payStatus;     // 交易标识 0：充电卡成功；1：充电卡失败
+        String   clientNo;
+        double   beforeMoney;   // 扣款前钱包余额
+        String   walletTradeNo; // 钱包交易序号
+        double   payMoney;      // 交易金额
+        String   payTime;
+        String   randomNo;
+        int      payType;
+        String   TAC;
+        int      keyVersion;    // 密钥版本
+        String   terminalNo;    // 终端交易序号
+        double   chargePrice;   // 充电服务费单价
+        double   chargeMoney;
+        double   bookPrice;     // 预约费单价
+        double   bookMoney;
+        double   placePrice;    // 占位费单价
+        double   placeMoney;
+
+        BizUpChargeRec(byte[] data, int from) {
+            super(data, from);
+            int index = from + len;
+            tradeNo = ProtocolUtils.getByteToHexStringDesc(data, index, 16, "");
+            index += 16;
+            payNo = ProtocolUtils.getByteToHexStringDesc(data, index, 8, "");
+            index += 8;
+            CardNo = ProtocolUtils.getByteToHexStringDesc(data, index, 8, "");
+            index += 8;
+            isTimes = ProtocolUtils.getByteToHexStringDesc(data, index, 1, "");
+            index += 1;
+
+            startTime = cp56time2a.toDate(Arrays.copyOfRange(data, index, index + 7));
+            index += 7;
+            endTime = cp56time2a.toDate(Arrays.copyOfRange(data, index, index + 7));
+            index += 7;
+
+            jianBegValue = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+			index += 4;
+			jianEndValue = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+			index += 4;
+			peakBegValue = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+			index += 4;
+			peakEndValue = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+			index += 4;
+			flatBegValue = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+			index += 4;
+			flatEndValue = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+			index += 4;
+			valleyBegValue = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+			index += 4;
+			valleyEndValue = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+			index += 4;
+            metType = ProtocolUtils.getByteToHexStringDesc(data, index, 2, "");
+            index += 2;
+            totalBegValue = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+			index += 4;
+			totalEndValue = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+			index += 4;
+			jianPrice = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.00001")).doubleValue();
+			index += 4;
+			jianElec = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+			index += 4;
+			jianMoney = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+			index += 4;
+
+			peakPrice = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.00001")).doubleValue();
+			index += 4;
+			peakElec = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+			index += 4;
+			peakMoney = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+			index += 4;
+
+			flatPrice = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.00001")).doubleValue();
+			index += 4;
+			flatElec = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+			index += 4;
+			flatMoney = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+			index += 4;
+
+			valleyPrice = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.00001")).doubleValue();
+			index += 4;
+			valleyElec = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+			index += 4;
+			valleyMoney = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+			index += 4;
+
+			totalElec = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+			index += 4;
+
+            businessType = ProtocolUtils.getByteToHexStringDesc(data, index, 2, "");
+            index += 2;
+
+            afterMoney = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+			index += 4;
+			
+			consumPrice = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+			index += 4;
+			consumMoney = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+			index += 4;
+
+            carId = Arrays.copyOfRange(data, index, index + 17).toString();
+            index += 17;
+
+            payStatus = ProtocolUtils.Unsignd(data[index]);
+            index += 1;
+            clientNo = byteTo6(data, index);
+            index += 6;
+
+            beforeMoney = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+			index += 4;
+
+            walletTradeNo = Short.toString(ProtocolUtils.byteToShort(data[index + 1], data[index]));
+            index += 2;
+            payMoney = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+			index += 2;
+
+            payTime = ProtocolUtils.getByteToHexStringDesc(data, index, 7, "");
+            index += 7;
+            randomNo = Integer.toString(ProtocolUtils.byteToInteger(data, index));
+            index += 4;
+
+            payType = ProtocolUtils.Unsignd(data[index]);
+            index += 1;
+            TAC = Integer.toString(ProtocolUtils.byteToInteger(data, index));
+            index += 4;
+
+            keyVersion = ProtocolUtils.Unsignd(data[index]);
+            index += 1;
+            terminalNo = Integer.toString(ProtocolUtils.byteToInteger(data, index));
+            index += 4;
+
+            chargePrice = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.00001")).doubleValue();
+			index += 4;
+			chargeMoney = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+			index += 4;
+			bookPrice = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.00001")).doubleValue();
+			index += 4;
+			bookMoney = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+			index += 4;
+			placePrice = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.00001")).doubleValue();
+			index += 4;
+			placeMoney = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+
+        }
+
+        private String byteTo6(byte[] data, int from) {
+            if (data == null || data.length < 6 + from) {
+                return null;
+            }
+            return Long.toString((long) ((ProtocolUtils.Unsignd(data[from + 5]) * 0x10000000000l) + ProtocolUtils.Unsignd(data[from + 4]) * 0x100000000l
+                                         + ProtocolUtils.Unsignd(data[from + 3]) * 0x1000000 + ProtocolUtils.Unsignd(data[from + 2]) * 0x10000
+                                         + ProtocolUtils.Unsignd(data[from + 1]) * 0x100 + ProtocolUtils.Unsignd(data[from])));
+        }
+
+    }
+
+    private class BizUpTradeRandom extends BizBase {
+
+        BizUpTradeRandom(byte[] data, int from) {
+            super(data, from);
+            int index = from + len;
+        }
+
+    }
+
+    private class BizUpReqFeeModel extends BizBase {
+
+        BizUpReqFeeModel(byte[] data, int from) {
+            super(data, from);
+            int index = from + len;
+        }
+
+    }
+
+    private class BizUpResultFeeModel extends BizBase {
+
+        String feeModelId;
+        int    isSuccess;
+
+        BizUpResultFeeModel(byte[] data, int from) {
+            super(data, from);
+            int index = from + len;
+            // TODO
+            // feeModelId =
+
+            isSuccess = ProtocolUtils.Unsignd(data[index + 8]);
+        }
+
+    }
+
+    private class BizUpTwowayAuthStart extends BizBase {
+
+        String cardNo;
+
+        BizUpTwowayAuthStart(byte[] data, int from) {
+            super(data, from);
+            int index = from + len;
+
+            cardNo = ProtocolUtils.getByteToHexStringDesc(data, index, 8, "");
+
+        }
+
+    }
+
+    private class BizUpTwowayAuthData extends BizBase {
+
+        String terminalRandomNo;
+        String safeModelCode;
+
+        BizUpTwowayAuthData(byte[] data, int from) {
+            super(data, from);
+            int index = from + len;
+
+            terminalRandomNo = ProtocolUtils.getByteToHexStringDesc(data, index, 8, "");
+            index += 8;
+
+            safeModelCode = ProtocolUtils.getByteToHexStringDesc(data, index, 8, "");
+
+        }
+
+    }
+
+    private class BizUpTwowayAuthResult extends BizBase {
+
+        int isSuccess;
+
+        BizUpTwowayAuthResult(byte[] data, int from) {
+            super(data, from);
+            int index = from + len;
+
+            isSuccess = ProtocolUtils.Unsignd(data[index]);
+        }
+
+    }
+
+    private class BizUpTowwayAuthResult extends BizBase {
+
+        BizUpTowwayAuthResult(byte[] data, int from) {
+            super(data, from);
+            int index = from + len;
+        }
+
+    }
+
+    private class BizUpKeyUpdateBase extends BizBase {
+
+        String esamNo;
+
+        BizUpKeyUpdateBase(byte[] data, int from) {
+            super(data, from);
+            int index = from + len;
+
+            esamNo = ProtocolUtils.getByteToHexStringDesc(data, index, 8, "");
+        }
+
+    }
+
+    private class BizUpKey1UpdateResult extends BizBase {
+
+        int isSuccess;
+
+        BizUpKey1UpdateResult(byte[] data, int from) {
+            super(data, from);
+            int index = from + len;
+
+            isSuccess = ProtocolUtils.Unsignd(data[index]);
+        }
+
+    }
+
+    private class BizUpKey2UpdateResult extends BizBase {
+
+        int isSuccess;
+
+        BizUpKey2UpdateResult(byte[] data, int from) {
+            super(data, from);
+            int index = from + len;
+
+            isSuccess = ProtocolUtils.Unsignd(data[index]);
+        }
+
+    }
+
+    private class BizUpBlackListResult extends BizBase {
+
+        String timeStampNo;
+        int    isSuccess;
+
+        BizUpBlackListResult(byte[] data, int from) {
+            super(data, from);
+            int index = from + len;
+
+            timeStampNo = ProtocolUtils.getByteToHexStringDesc(data, index, 9, "");
+            index += 9;
+
+            isSuccess = ProtocolUtils.Unsignd(data[index]);
+        }
+
+    }
+
+    private class BizUpRemoteStartResult extends BizBase {
+
+        int isSuccess;
+        int exceptionCause;
+
+        BizUpRemoteStartResult(byte[] data, int from) {
+            super(data, from);
+            int index = from + len;
+
+            isSuccess = ProtocolUtils.Unsignd(data[index]);
+
+            exceptionCause = ProtocolUtils.Unsignd(data[index + 1]);
+        }
+
+    }
+
+    private class BizUpRemoteStopResult extends BizBase {
+
+        int isSuccess;
+
+        BizUpRemoteStopResult(byte[] data, int from) {
+            super(data, from);
+            int index = from + len;
+
+            isSuccess = ProtocolUtils.Unsignd(data[index]);
+        }
+
+    }
+
+    private class BizUpPowerControlResult extends BizBase {
+
+        int isSuccess;
+
+        BizUpPowerControlResult(byte[] data, int from) {
+            super(data, from);
+            int index = from + len;
+
+            isSuccess = ProtocolUtils.Unsignd(data[index]);
+        }
+
+    }
+
+    private class BizUpSoftUpdateResult extends BizBase {
+
+        int isSuccess;
+
+        BizUpSoftUpdateResult(byte[] data, int from) {
+            super(data, from);
+
+            isSuccess = chargeInterface;
+        }
+
+    }
+
+    private class BizUpChargingData extends BizBase {
+
+        String   tradeNo;
+        String   businessType;
+        String   userNo;
+        String   CardNo;
+        Calendar startTime;
+        Calendar endTime;
+        double   jianBegValue;  // 尖起示值
+        double   jianEndValue;  // 尖止示值
+        double   peakBegValue;
+        double   peakEndValue;
+        double   flatBegValue;  // 平起示值
+        double   flatEndValue;
+        double   valleyBegValue; // 谷起示值
+        double   valleyEndValue;
+        double   jianElec;      // 尖电量
+        double   peakElec;
+        double   flatElec;
+        double   valleyElec;
+        double   totalElec;     // 总电量
+        String   metType;       // 计量类型
+        double   totalBegValue; // 总起示值
+        double   totalEndValue;
+        String   isTimes;
+        String   carId;
+
+        BizUpChargingData(byte[] data, int from) {
+            super(data, from);
+            int index = from + len;
+            tradeNo = ProtocolUtils.getByteToHexStringDesc(data, index, 16, "");
+            index += 16;
+            businessType = ProtocolUtils.getByteToHexStringDesc(data, index, 2, "");
+            index += 2;
+            userNo = ProtocolUtils.getByteToHexStringDesc(data, index, 8, "");
+            index += 16;
+
+            CardNo = ProtocolUtils.getByteToHexStringDesc(data, index, 8, "");
+            index += 8;
+
+            startTime = cp56time2a.toDate(Arrays.copyOfRange(data, index, index + 7));
+            index += 7;
+            endTime = cp56time2a.toDate(Arrays.copyOfRange(data, index, index + 7));
+            index += 7;
+
+            jianBegValue = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+            index += 4;
+            jianEndValue = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+            index += 4;
+            peakBegValue = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+            index += 4;
+            peakEndValue = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+            index += 4;
+            flatBegValue = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+            index += 4;
+            flatEndValue = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+            index += 4;
+            valleyBegValue = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+            index += 4;
+            valleyEndValue = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+            index += 4;
+
+            jianElec = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+            index += 4;
+            peakElec = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+            index += 4;
+            flatElec =new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+            index += 4;
+            valleyElec = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+            index += 4;
+            totalElec = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+            index += 4;
+
+            metType = ProtocolUtils.getByteToHexStringDesc(data, index, 2, "");
+            index += 2;
+
+            totalBegValue = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+            index += 4;
+            totalEndValue = new BigDecimal(ProtocolUtils.byteToInteger(data,index)+"").multiply(new BigDecimal("0.01")).doubleValue();
+            index += 4;
+
+            isTimes = ProtocolUtils.getByteToHexStringDesc(data, index, 1, "");
+            index += 1;
+            carId = Arrays.copyOfRange(data, index, index + 17).toString();
+
+        }
+
+    }
+
+    private class BizUpChargingDataSetResult extends BizBase {
+
+        int isSuccess;
+
+        BizUpChargingDataSetResult(byte[] data, int from) {
+            super(data, from);
+            int index = from + len;
+            isSuccess = ProtocolUtils.Unsignd(data[index]);
+        }
+    }
+
+    private class BizDCPileMonitor extends BizBase {
+
+        float   dcOutV;
+        float   dcOutI;
+        int     SOC;
+        float   BatTempLow;   // 电池组最低温度
+        float   BatTempHigh;
+        int     totalTime;
+        int     workstatus;
+        boolean BmsError;
+        boolean dcOutOver;    // 直流母线输出过压告警
+        boolean dcOutLoss;
+        boolean BatCurOver;   // 蓄电池充电过流告警
+        boolean BatPntempOver;
+        float   ygZong;       // 有功总电能
+        boolean BatLinked;    // 是否连接电池
+        float   BatSvHigh;    // 单体电池最高电压
+        float   BatSvLow;     // 单体电池最低电压
+        boolean DevLinkedErr; // 充电机连接器故障
+        boolean BmsLoss;
+        boolean DevTempError; // 充电机内部温度故障
+        boolean protectTemp;
+        boolean protectShort;
+        boolean protectLeak;
+        boolean protectStop;
+        int     len = 0;
+
+        BizDCPileMonitor(byte[] data, int from) {
+            super(data, from);
+            int index = from + len;
+            // linkcon = data[index++]==0?false:true;
+            // workstatus = ProtocolUtils.byteToShort(data[index+1], data[index]);
+            // index+=2;
+            // acInOver = data[index++]==0?false:true;
+            // acInLoss = data[index++]==0?false:true;
+            // iOver = data[index++]==0?false:true;
+            // acOutV = (float) (ProtocolUtils.byteToShort(data[index+1], data[index])*0.1);
+            // index+=2;
+            // acOutI = (float) (ProtocolUtils.byteToShort(data[index+1], data[index])*0.01);
+            // index+=2;
+            // relayOut = data[index++]==0?false:true;
+            dcOutV = new BigDecimal(ProtocolUtils.byteToShort(data[index + 1], data[index])+"").multiply(new BigDecimal("0.1")).floatValue();
+            index += 2;
+            dcOutI = new BigDecimal(ProtocolUtils.byteToShort(data[index + 1], data[index])+"").multiply(new BigDecimal("0.01")).floatValue();
+            index += 2;
+            SOC = ProtocolUtils.byteToShort(data[index + 1], data[index]);
+            index += 2;
+            BatTempLow = new BigDecimal(ProtocolUtils.byteToShort(data[index + 1], data[index])+"").multiply(new BigDecimal("0.1")).floatValue();
+            index += 2;
+            BatTempHigh = new BigDecimal(ProtocolUtils.byteToShort(data[index + 1], data[index])+"").multiply(new BigDecimal("0.1")).floatValue();
+            index += 2;
+            totalTime = ProtocolUtils.byteToShort(data[index + 1], data[index]);
+            index += 2;
+            workstatus = ProtocolUtils.byteToShort(data[index + 1], data[index]);
+            index += 2;
+            BmsError = data[index] == 0 ? false : true;
+            index += 1;
+            dcOutOver = data[index] == 0 ? false : true;
+            index += 1;
+            dcOutLoss = data[index] == 0 ? false : true;
+            index += 1;
+            BatCurOver = data[index] == 0 ? false : true;
+            index += 1;
+            BatPntempOver = data[index] == 0 ? false : true;
+            index += 1;
+            ygZong = ProtocolUtils.byteToShort(data[index + 1], data[index]) + ProtocolUtils.byteToShort(data[index + 3], data[index + 2]) * 0x10000;
+            //ygZong *= 0.1;
+            ygZong *= new BigDecimal(ygZong+"").multiply(new BigDecimal("0.1")).floatValue();
+            index += 4;
+            BatLinked = data[index] == 0 ? false : true;
+            index += 1;
+            BatSvHigh = new BigDecimal(ProtocolUtils.byteToShort(data[index + 1], data[index])+"").multiply(new BigDecimal("0.001")).floatValue();
+            index += 2;
+            BatSvLow = new BigDecimal(ProtocolUtils.byteToShort(data[index + 1], data[index])+"").multiply(new BigDecimal("0.001")).floatValue();
+            index += 2;
+            DevLinkedErr = data[index] == 0 ? false : true;
+            index += 1;
+            BmsLoss = data[index] == 0 ? false : true;
+            index += 1;
+            DevTempError = data[index] == 0 ? false : true;
+            index += 1;
+            protectTemp = data[index++] == 0 ? false : true;
+            protectShort = data[index++] == 0 ? false : true;
+            protectLeak = data[index++] == 0 ? false : true;
+            protectStop = data[index++] == 0 ? false : true;
+            len = index - from;
+        }
+    }
+
+    private class BizACPileMonitor extends BizBase {
+
+        boolean linkcon;
+        int     workstatus;
+        boolean acInOver;
+        boolean acInLoss;
+        boolean iOver;
+        float   acOutV;
+        float   acOutI;
+        boolean relayOut;
+        float   ygZong;
+        int     totalTime;
+        int     leftTime;
+        float   vaCur;
+        float   vbCur;
+        float   vcCur;
+        float   iaCur;
+        float   ibCur;
+        float   icCur;
+        boolean protectTemp;
+        boolean protectShort;
+        boolean protectLeak;
+        boolean protectStop;
+        int     len = 0;
+
+        BizACPileMonitor(byte[] data, int from) {
+            super(data, from);
+            int index = from + len;
+            linkcon = data[index++] == 0 ? false : true;
+            workstatus = ProtocolUtils.byteToShort(data[index + 1], data[index]);
+            index += 2;
+            acInOver = data[index++] == 0 ? false : true;
+            acInLoss = data[index++] == 0 ? false : true;
+            iOver = data[index++] == 0 ? false : true;
+            acOutV = new BigDecimal(ProtocolUtils.byteToShort(data[index + 1], data[index])+"").multiply(new BigDecimal("0.1")).floatValue();
+            index += 2;
+            acOutI = new BigDecimal(ProtocolUtils.byteToShort(data[index + 1], data[index])+"").multiply(new BigDecimal("0.01")).floatValue();
+            index += 2;
+            relayOut = data[index++] == 0 ? false : true;
+            ygZong = ProtocolUtils.byteToShort(data[index + 1], data[index]) + ProtocolUtils.byteToShort(data[index + 3], data[index + 2]) * 0x10000;
+            ygZong *= 0.1;
+            index += 5;
+            totalTime = ProtocolUtils.byteToShort(data[index + 1], data[index]);
+            index += 2;
+            leftTime = ProtocolUtils.byteToShort(data[index + 1], data[index]);
+            index += 2;
+            vaCur = new BigDecimal(ProtocolUtils.byteToShort(data[index + 1], data[index])+"").multiply(new BigDecimal("0.1")).floatValue();
+            index += 2;
+            vbCur = new BigDecimal(ProtocolUtils.byteToShort(data[index + 1], data[index])+"").multiply(new BigDecimal("0.1")).floatValue();
+            index += 2;
+            vcCur = new BigDecimal(ProtocolUtils.byteToShort(data[index + 1], data[index])+"").multiply(new BigDecimal("0.1")).floatValue();
+            index += 2;
+            iaCur = new BigDecimal(ProtocolUtils.byteToShort(data[index + 1], data[index])+"").multiply(new BigDecimal("0.01")).floatValue();
+            index += 2;
+            ibCur = new BigDecimal(ProtocolUtils.byteToShort(data[index + 1], data[index])+"").multiply(new BigDecimal("0.01")).floatValue();
+            index += 2;
+            icCur = new BigDecimal(ProtocolUtils.byteToShort(data[index + 1], data[index])+"").multiply(new BigDecimal("0.01")).floatValue();
+            index += 2;
+            protectTemp = data[index++] == 0 ? false : true;
+            protectShort = data[index++] == 0 ? false : true;
+            protectLeak = data[index++] == 0 ? false : true;
+            protectStop = data[index++] == 0 ? false : true;
+            len = index - from;
+        }
+    }
+
+    public static class INFO_ADDR_AC {
+
+        static int       ME            = 0;
+        static int       SP            = 0;
+        static int       MD            = 0;
+        /** 信息体定义，请注意顺序不能变动，必须与协议一致 **/
+        // static final int DEVCODE=MD++; //充电设备编号
+        // static final int CHARGE_INTERFACE=SP++; //充电接口
+        static final int LINKCON       = SP++; // 连接确认
+        static final int WORKSTATUS    = ME++; // 工作状态
+        static final int AC_IN_OVER    = SP++; // 交流输入过压状态
+        static final int AC_IN_LOSS    = SP++; // 交流输入欠压状态
+        static final int I_OVER        = SP++; // 充电电流过负荷告警
+        static final int AC_OUT_V      = ME++; // 充电输出电压
+        static final int AC_OUT_I      = ME++; // 充电输出电流
+        static final int RELAY_OUT     = SP++; // 输出继电器状态
+        static final int YG_ZONG       = MD++; // 有功总电能
+        static final int TOTAL_TIME    = ME++; // 累计充电时间
+        static final int LEFT_TIME     = ME++; // 预计剩余充电时间
+        static final int VA_CUR        = ME++; // 当前A相电压
+        static final int VB_CUR        = ME++; // 当前B相电压
+        static final int VC_CUR        = ME++; // 当前C相电压
+        static final int IA_CUR        = ME++; // 当前A相电流
+        static final int IB_CUR        = ME++; // 当前B相电流
+        static final int IC_CUR        = ME++; // 当前C相电流
+        static final int PROTECT_TEMP  = SP++; // 温度过高保护
+        static final int PROTECT_SHORT = SP++; // 短路保护
+        static final int PROTECT_LEAK  = SP++; // 漏电保护
+        static final int PROTECT_STOP  = SP++; // 急停开关触发
+
+        // static final int CHARGE_MODE=SP++; // 充电模式
+
+        static Integer getYCCode(int addrInfo) {
+            if (addrInfo == WORKSTATUS) {
+                return DataTypeEnum.YC_WORKSTATUS.getValue();
+            } else if (addrInfo == AC_OUT_V) {
+                return DataTypeEnum.YC_AC_OUT_V.getValue();
+            } else if (addrInfo == AC_OUT_I) {
+                return DataTypeEnum.YC_AC_OUT_I.getValue();
+            } else if (addrInfo == TOTAL_TIME) {
+                return DataTypeEnum.YC_TOTAL_TIME.getValue();
+            } else if (addrInfo == LEFT_TIME) {
+                return DataTypeEnum.YC_LEFT_TIME.getValue();
+            } else if (addrInfo == VA_CUR) {
+                return DataTypeEnum.YC_VA_CUR.getValue();
+            } else if (addrInfo == VB_CUR) {
+                return DataTypeEnum.YC_VB_CUR.getValue();
+            } else if (addrInfo == VC_CUR) {
+                return DataTypeEnum.YC_VC_CUR.getValue();
+            } else if (addrInfo == IA_CUR) {
+                return DataTypeEnum.YC_IA_CUR.getValue();
+            } else if (addrInfo == IB_CUR) {
+                return DataTypeEnum.YC_IB_CUR.getValue();
+            } else if (addrInfo == IC_CUR) {
+                return DataTypeEnum.YC_IC_CUR.getValue();
+            } else {
+                return null;
+            }
+        }
+
+        static Integer getYXCode(int addrInfo) {
+            if (addrInfo == LINKCON) {
+                return DataTypeEnum.YX_LINKCON.getValue();
+            } else if (addrInfo == AC_IN_OVER) {
+                return DataTypeEnum.YX_AC_IN_OVER.getValue();
+            } else if (addrInfo == AC_IN_LOSS) {
+                return DataTypeEnum.YX_AC_IN_LOSS.getValue();
+            } else if (addrInfo == I_OVER) {
+                return DataTypeEnum.YX_I_OVER.getValue();
+            } else if (addrInfo == RELAY_OUT) {
+                return DataTypeEnum.YX_RELAY_OUT.getValue();
+            } else if (addrInfo == PROTECT_TEMP) {
+                return DataTypeEnum.YX_PROTECT_TEMP.getValue();
+            } else if (addrInfo == PROTECT_SHORT) {
+                return DataTypeEnum.YX_PROTECT_SHORT.getValue();
+            } else if (addrInfo == PROTECT_LEAK) {
+                return DataTypeEnum.YX_PROTECT_LEAK.getValue();
+            } else if (addrInfo == PROTECT_STOP) {
+                return DataTypeEnum.YX_PROTECT_STOP.getValue();
+            } else {
+                return null;
+            }
+        }
+
+        static Integer getYACode(int addrInfo) {
+            if (addrInfo == YG_ZONG) {
+                return DataTypeEnum.YA_YG_ZONG.getValue();
+            } else {
+                return null;
+            }
+        }
+    }
+
+    public static class INFO_ADDR_DC {
+
+        static int       ME              = 0;
+        static int       SP              = 0;
+        static int       MD              = 0;
+        /** 信息体定义，请注意顺序不能变动，必须与协议一致 **/
+        // static final int DEVCODE=MD++; //充电设备编号
+        static final int OUT_V           = ME++; // 充电机输出电压
+        static final int OUT_I           = ME++; // 充电机输出电流
+        static final int IN_V            = ME++; // 充电机输入电压
+        static final int SOC             = ME++; // SOC
+        static final int BAT_TEMP_LOW    = ME++; // 电池组最低温度
+        static final int BAT_TEMP_HIGH   = ME++; // 电池组最高温度
+        static final int TOTAL_TIME      = ME++; // 累计充电时间
+        static final int WORKSTATUS      = ME++; // 工作状态
+        static final int BMS_ERROR       = SP++; // BMS通信异常
+        static final int DC_OUT_OVER     = SP++; // 直流母线输出过压告警
+        static final int DC_OUT_LOSS     = SP++; // 直流母线输出欠压告警
+        static final int IN_OVER         = SP++; // 充电机输入过压告警
+        static final int IN_LOSS         = SP++; // 充电机输入欠压告警
+        static final int BAT_CUR_OVER    = SP++; // 蓄电池充电过流告警
+        static final int BAT_PNTEMP_OVER = SP++; // 蓄电池模块采样点过温告警
+        static final int YG_ZONG         = MD++; // 有功总电能
+        static final int BAT_LINKED      = SP++; // 是否连接电池
+        static final int BAT_SV_HIGH     = ME++; // 单体电池最高电压
+        static final int BAT_SV_LOW      = ME++; // 单体电池最低电压
+        static final int DEV_LINKED_ERR  = SP++; // 充电机连接器故障
+        static final int BMS_LOSS        = SP++; // BMS终止
+        static final int DEV_TEMP_ERROR  = SP++; // 充电机内部温度故障
+        static final int PROTECT_TEMP    = SP++; // 温度过高保护
+        static final int PROTECT_SHORT   = SP++; // 短路保护
+        static final int PROTECT_LEAK    = SP++; // 漏电保护
+        static final int PROTECT_STOP    = SP++; // 急停开关触发
+
+        /****************************************/
+
+        static Integer getYCCode(int addrInfo) {
+            if (addrInfo == OUT_V) {
+                return DataTypeEnum.YC_OUT_V.getValue();
+            } else if (addrInfo == OUT_I) {
+                return DataTypeEnum.YC_OUT_I.getValue();
+            } else if (addrInfo == IN_V) {
+                return DataTypeEnum.YC_IN_V.getValue();
+            } else if (addrInfo == SOC) {
+                return DataTypeEnum.YC_SOC.getValue();
+            } else if (addrInfo == BAT_TEMP_LOW) {
+                return DataTypeEnum.YC_BAT_TEMP_LOW.getValue();
+            } else if (addrInfo == BAT_TEMP_HIGH) {
+                return DataTypeEnum.YC_BAT_TEMP_HIGH.getValue();
+            } else if (addrInfo == TOTAL_TIME) {
+                return DataTypeEnum.YC_TOTAL_TIME.getValue();
+            } else if (addrInfo == WORKSTATUS) {
+                return DataTypeEnum.YC_WORKSTATUS.getValue();
+            } else if (addrInfo == BAT_SV_HIGH) {
+                return DataTypeEnum.YC_BAT_SV_HIGH.getValue();
+            } else if (addrInfo == BAT_SV_LOW) {
+                return DataTypeEnum.YC_BAT_SV_LOW.getValue();
+            } else {
+                return null;
+            }
+        }
+
+        static Integer getYXCode(int addrInfo) {
+            if (addrInfo == BMS_ERROR) {
+                return DataTypeEnum.YX_BMS_ERROR.getValue();
+            } else if (addrInfo == DC_OUT_OVER) {
+                return DataTypeEnum.YX_DC_OUT_OVER.getValue();
+            } else if (addrInfo == DC_OUT_LOSS) {
+                return DataTypeEnum.YX_DC_OUT_LOSS.getValue();
+            } else if (addrInfo == IN_OVER) {
+                return DataTypeEnum.YX_AC_IN_OVER.getValue();
+            } else if (addrInfo == IN_LOSS) {
+                return DataTypeEnum.YX_AC_IN_LOSS.getValue();
+            } else if (addrInfo == BAT_CUR_OVER) {
+                return DataTypeEnum.YX_BAT_CUR_OVER.getValue();
+            } else if (addrInfo == BAT_PNTEMP_OVER) {
+                return DataTypeEnum.YX_BAT_PNTEMP_OVER.getValue();
+            } else if (addrInfo == BAT_LINKED) {
+                return DataTypeEnum.YX_BAT_LINKED.getValue();
+            } else if (addrInfo == DEV_LINKED_ERR) {
+                return DataTypeEnum.YX_DEV_LINKED_ERR.getValue();
+            } else if (addrInfo == BMS_LOSS) {
+                return DataTypeEnum.YX_BMS_LOSS.getValue();
+            } else if (addrInfo == DEV_TEMP_ERROR) {
+                return DataTypeEnum.YX_DEV_TEMP_ERROR.getValue();
+            } else if (addrInfo == PROTECT_TEMP) {
+                return DataTypeEnum.YX_PROTECT_TEMP.getValue();
+            } else if (addrInfo == PROTECT_SHORT) {
+                return DataTypeEnum.YX_PROTECT_SHORT.getValue();
+            } else if (addrInfo == PROTECT_LEAK) {
+                return DataTypeEnum.YX_PROTECT_LEAK.getValue();
+            } else if (addrInfo == PROTECT_STOP) {
+                return DataTypeEnum.YX_PROTECT_STOP.getValue();
+            } else {
+                return null;
+            }
+        }
+
+        static Integer getYACode(int addrInfo) {
+            if (addrInfo == YG_ZONG) {
+                return DataTypeEnum.YA_YG_ZONG.getValue();
+            } else {
+                return null;
+            }
+        }
+    }
+
+    @Override
+    public int sendBizData(BizCmdTypeEnum cmdType, Object data, PileService pileService, ChannelService channel) {
+        BizDownBase bdb = null;
+        if (cmdType.equals(BizCmdTypeEnum.STARTCHARGE)) {
+            MsgChargeStart msgChargeStart = (MsgChargeStart) data;
+            bdb = new BizDownRemoteStart(pileService, msgChargeStart);
+        } else if (cmdType.equals(BizCmdTypeEnum.STOPCHARGE)) {
+            MsgChargeStop msgChargeStop = (MsgChargeStop) data;
+            bdb = new BizDownRemoteStop(pileService, msgChargeStop);
+        } else {
+            logger.warn("收到非法业务下发请求!  cmdType=" + cmdType.getValue());
+            return 0;
+        }
+
+        if (bdb != null) {
+            writeData_I(channel, makeIFrame(pileService, TYPE_C_SD_NA_1, 0, bdb));
+        }
+        return 0;
+    }
+
+    @Override
+    public void onTimer(PileService pileService, ChannelService channel) {
+        if (channel == null) {
+            return;
+        }
+        Date now = Calendar.getInstance().getTime();
+
+        // 连续收到上报I帧，超时确认
+        if (now.getTime() - lastRecvTime.getTime() > T2_104 * 1000) {
+            writeData_S(channel, makeFrame_S());
+        }
+
+        // 未收到确认帧断开连接
+        if (now.getTime() - lastSendTime.getTime() > T1_104 * 1000) {
+            if (needConfirm) {
+                closeConnect(pileService, channel);
+            }
+        }
+
+        // 超过心跳间隔
+        if (now.getTime() - lastRecvTime.getTime() > T4_heart * 1000) {
+            closeConnect(pileService, channel);
+        }
+    }
+
+    private int writeData_I(ChannelService channel, byte[] data) {
+        W_104 = 0;
+        needConfirm = true;
+        return channel.writeData(data);
+    }
+
+    private int writeData_S(ChannelService channel, byte[] data) {
+        W_104 = 0;
+        return channel.writeData(data);
+    }
+}

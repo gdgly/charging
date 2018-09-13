@@ -1,0 +1,14 @@
+@charset "utf-8";
+
+.content{
+	
+	margin-left: 230px;
+	width: 70%;
+}
+span{
+	color: gray;
+	font-size: 15px;
+}
+.img{
+	margin-top: 50px;
+}

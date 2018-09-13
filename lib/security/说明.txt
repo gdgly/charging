@@ -1,0 +1,2 @@
+APP加解密相关的jar包，替换jdk里相关加密的jar包
+路径:jdk1.7.0_55\jre\lib\security

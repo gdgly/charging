@@ -1,0 +1,144 @@
+.pilldiv {
+    width: 270px;
+    height: 425px;
+    z-index: -1;
+    float: left;
+    padding-top: 10px;
+    border: #b9bbbc 1px solid;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    margin-left: 1%;
+    margin-top: 0
+    }
+
+.pilldivColor {
+    float: left;
+    padding: 7px;
+    background-image: none;
+    border: 0;
+    margin-left: 15px;
+    margin-top: 8px;
+    border-radius: 0;
+}
+.nameCount {
+    float: left;
+    margin-left: 5px;
+    width: 99px;
+    height: 30px;
+    line-height: 30px;
+    font-size: 16px;
+    font-weight: bolder;
+}
+.pilldivInfo {
+    padding: 2px 0;
+    font-size: 14px;
+    font-family: 'Microsoft YaHei';
+    line-height: 15px;
+    margin-bottom: 2px;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.redname {
+    width: 50px;
+    text-align: left;
+    float: left;
+    font-size: 14px;
+}
+.rednameRight {
+    width: 50px;
+    text-align: left;
+    float: left;
+    font-size: 14px;
+    margin-left: 70px;
+}
+.pilldivS {
+    float: left;
+    width: 270px;
+    height: 335px;
+    padding-left: 15px;
+    margin-top: 6px;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.pilldivButton {
+    float: left;
+    width: 270px;
+    height: 38px;
+    padding: 8px;
+    text-align: center;
+    font-size: 18px;
+    color: white;
+    font-weight: bolder;
+    font-family: "Microsoft YaHei";
+    margin-top: 5px;
+    margin-left: -1px;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    border: 0;
+    outline: 0;
+    background-color: #d7d9db;
+    }
+.numcolor {
+    background-color: #e5e5e5;
+}
+.navbar-toggleColor2 {
+    float: left;
+    margin-top: 16px;
+    margin-right: 20px;
+    font-size: 14px;
+    border-radius: 5px;
+    height: 16px;
+    line-height: 16px;
+    text-align: center;
+    width: 50px;
+}
+.navbar-toggleText {
+    float: left;
+    margin-top: 16px;
+    margin-bottom: 8px;
+    margin-left: 10px;
+    margin-right: 5px;
+    font-size: 16px;
+    line-height: 16px;
+    background-image: none;
+    border: 0;
+    border-radius: 0px;
+}
+.wide {
+    margin-left: -12px;
+    margin-right: -12px;
+}
+/* 空闲 */
+.statecolorH {
+    background-color: #49A449;
+}
+/* 充电中 */
+.statecolorM {
+    background-color: #63BBFF;
+}
+/* 离线 */
+.statecolorZ {
+    background-color: #BFBFBF;
+}
+/* 忙碌中 */
+.statecolorY {
+    background-color: #de8d3a;
+}
+/* 故障 */
+.statecolorL {
+    background-color: #FF6969;
+}
+.navbar-toggleColor {
+    float: left;
+    padding: 7px;
+    margin-top: 16px;
+    margin-bottom: 8px;
+    background-image: none;
+    border: 0;
+    border-radius: 0px;
+    /* z-index: 1000; */
+}

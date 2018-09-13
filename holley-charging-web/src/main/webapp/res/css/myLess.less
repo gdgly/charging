@@ -1,0 +1,83 @@
+@charset "utf-8";
+//常量
+@nav-width:100px;
+@nav-height:50px;
+@colorwhite:#fdfdfe;
+@colorblue:#0a94f2;
+@colordeepgray:#a8a8a8;
+
+//字体改为雅黑
+body,button, input, select, textarea,h1 ,h2, h3, h4, h5, h6 { font-family: Microsoft YaHei,'宋体' , Tahoma, Helvetica, Arial, "\5b8b\4f53", sans-serif;}
+
+//菜单样式
+.navbar {
+    border-radius: 0;
+    margin-bottom: 0;
+    border-style: none;
+}
+
+.navbar-inverse {
+    background-color: #1d2f3b;
+    border-color: #080808;
+}
+
+.navbar-form {
+    margin-top: 0;
+    margin-bottom: 0;
+    height:@nav-height;
+}
+
+.navbar-inverse .navbar-brand {
+    color: @colorwhite;
+}
+
+.nav-li{
+    list-style: none;
+    display: inline-block;
+    position: relative;
+}
+
+.navbar-nav>li {
+	.nav-li;
+    width:@nav-width;
+}
+
+.navbar-nav>li:hover {
+	background-color: #555555;
+}
+
+.navbar-nav>li>a {
+    padding-top: 15px;
+    padding-bottom: 15px;
+    text-align: center;
+}
+
+.navbar-inverse .navbar-nav>li>a {
+    color: @colorwhite;
+}
+
+.navbar-inverse .navbar-nav>.active>a, .navbar-inverse .navbar-nav>.active>a:focus, .navbar-inverse .navbar-nav>.active>a:hover {
+    background-color: @colorblue;
+    list-style: none;
+}
+
+//首页-页脚
+.main-footer {
+    background: @colordeepgray;
+}
+
+//中间容器
+.main{
+	margin-top:@nav-height;
+}
+
+
+
+
+
+
+
+
+
+
+

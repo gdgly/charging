@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC  
+    "-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"  
+    "http://struts.apache.org/dtds/struts-2.3.dtd">   
+<struts>
+	<!--设备管理 --> 
+	<package name="device" namespace="/device" extends="struts-base">
+		<!-- 充电点审核 -->
+		<action name="stationVerifyList" class="deviceVerifyAction" method="stationVerifyListInit">
+			<result name="success">/jsp/device/stationVerifyList.jsp</result>
+		</action>
+		<action name="stationVerify" class="deviceVerifyAction" method="stationVerifyInit">
+			<result name="success">/jsp/device/stationVerify.jsp</result>
+		</action>
+		<action name="stationVerifyDetail" class="deviceVerifyAction" method="stationVerifyDetailInit">
+			<result name="success">/jsp/device/stationVerifyDetail.jsp</result>
+		</action>
+		<!-- 充电桩审核 -->
+		<action name="pileVerifyList" class="deviceVerifyAction" method="pileVerifyListInit">
+			<result name="success">/jsp/device/pileVerifyList.jsp</result>
+		</action>
+		<action name="pileVerify" class="deviceVerifyAction" method="pileVerifyInit">
+			<result name="success">/jsp/device/pileVerify.jsp</result>
+		</action>
+		<action name="pileVerifyDetail" class="deviceVerifyAction" method="pileVerifyDetailInit">
+			<result name="success">/jsp/device/pileVerifyDetail.jsp</result>
+		</action>
+		<!-- 充电点 -->
+		<action name="stationList" class="stationAction" method="stationListInit">
+			<result name="success">/jsp/device/stationList.jsp</result>
+		</action>
+		<action name="stationDetail" class="stationAction" method="stationDetailInit">
+			<result name="success">/jsp/device/stationDetail.jsp</result>
+		</action>
+		<action name="addStation" class="stationAction" method="addStationInit">
+			<result name="success">/jsp/device/addStation.jsp</result>
+		</action>
+		<action name="editStation" class="stationAction" method="editStationInit">
+			<result name="success">/jsp/device/editStation.jsp</result>
+			<result name="member" type="redirectAction">stationList</result>
+		</action>
+		<!-- 充电桩 -->
+		<action name="pileList" class="pileAction" method="pileListInit">
+			<result name="success">/jsp/device/pileList.jsp</result>
+		</action>
+		<action name="pileDetail" class="pileAction" method="pileDetailInit">
+			<result name="success">/jsp/device/pileDetail.jsp</result>
+		</action>
+		<action name="addPile" class="pileAction" method="addPileInit">
+			<result name="success">/jsp/device/addPile.jsp</result>
+			<result name="member" type="redirectAction">stationList</result>
+		</action>
+		<action name="editPile" class="pileAction" method="editPileInit">
+			<result name="success">/jsp/device/editPile.jsp</result>
+			<result name="member" type="redirectAction">pileList</result>
+		</action>
+		<!-- 充电桩型号 -->
+		<action name="pileModelList" class="pileModelAction" method="init">
+			<result name="success">/jsp/device/pileModelList.jsp</result>
+		</action>
+		<action name="addPileModelInit" class="pileModelAction" method="addPileModelInit">
+			<result name="success">/jsp/device/editPileModel.jsp</result>
+		</action>
+		<action name="editPileModelInit" class="pileModelAction" method="editPileModelInit">
+			<result name="success">/jsp/device/editPileModel.jsp</result>
+		</action>
+		<action name="pileModelDetailInit" class="pileModelAction" method="pileModelDetailInit">
+			<result name="success">/jsp/device/pileModelDetail.jsp</result>
+		</action>
+		<!-- 服务点 -->
+		<action name="repairPointList" class="repairPointAction" method="init">
+			<result name="success">/jsp/device/repairPointList.jsp</result>
+		</action>
+		<action name="editRepairPointInit" class="repairPointAction" method="editRepairPointInit">
+			<result name="success">/jsp/device/editRepairPoint.jsp</result>
+		</action>
+	</package>
+	<package name="device_json" namespace="/device" extends="json-base">
+		<action name="deviceVerify_*" class="deviceVerifyAction" method="{1}">
+			<result type="json" />
+		</action>
+		<action name="station_*" class="stationAction" method="{1}">
+			<result type="json"/>
+		</action>
+		<action name="pile_*" class="pileAction" method="{1}">
+			<result type="json"/>
+		</action>
+		<action name="pileModel_*" class="pileModelAction" method="{1}">
+			<result type="json"/>
+		</action>
+		<action name="repairPoint_*" class="repairPointAction" method="{1}">
+			<result type="json"/>
+		</action>
+	</package>
+</struts>

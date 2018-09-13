@@ -1,0 +1,66 @@
+.logincenter{
+	padding-left: 0;
+	padding-right: 0;
+	height: 100%;
+}
+.login-page {
+   width: 315px;
+   padding-bottom: 10px;
+   margin-top: 35%;
+   padding-top:15px;
+   background-color: #fdfdfd;
+}
+
+.login-tip{
+	margin-left: 25px;
+	margin-right: 25px;
+	color: red; 
+	visibility: hidden;
+}
+
+.login-page .form-horizontal .form-group {
+    margin-right: 10px;
+    margin-left: 10px;
+}
+
+.forgetpwd,.forgetpwd:hover{
+	color: #0a94f2;
+	text-decoration: none;
+}
+
+.register,.register:hover{
+	color: #f49447;
+	text-decoration: none;
+}
+.login-btn{
+	background-color: #0a94f2;
+	color: #fff;
+}
+
+.login-page .form-horizontal .has-feedback .form-control-feedback {
+	top:6px;
+    left: 15px;
+    color: #cdcdcd;
+    font-size: 18px;
+}
+
+.input-lg {
+    height: 46px;
+    padding: 10px 40px;
+    font-size: 18px;
+    line-height: 1.3333333;
+    border-radius: 6px;
+}
+
+.authcenter-background {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    overflow: hidden;
+    z-index: -2;
+}
+
+
+

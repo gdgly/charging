@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.holley.charging.dcs.dao.mapper.AlarmEventsMapper" >
+  <resultMap id="BaseResultMap" type="com.holley.charging.dcs.dao.model.AlarmEvents" >
+    <id column="ID" property="id" jdbcType="INTEGER" />
+    <result column="PILE_ID" property="pileId" jdbcType="INTEGER" />
+    <result column="EVENT_ID" property="eventId" jdbcType="CHAR" />
+    <result column="DESCRIBED" property="described" jdbcType="VARCHAR" />
+    <result column="LEVEL" property="level" jdbcType="SMALLINT" />
+    <result column="EVENT_TIME" property="eventTime" jdbcType="TIMESTAMP" />
+  </resultMap>
+  <sql id="Example_Where_Clause" >
+    <where >
+      <foreach collection="oredCriteria" item="criteria" separator="or" >
+        <if test="criteria.valid" >
+          <trim prefix="(" suffix=")" prefixOverrides="and" >
+            <foreach collection="criteria.criteria" item="criterion" >
+              <choose >
+                <when test="criterion.noValue" >
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue" >
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue" >
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue" >
+                  and ${criterion.condition}
+                  <foreach collection="criterion.value" item="listItem" open="(" close=")" separator="," >
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause" >
+    <where >
+      <foreach collection="example.oredCriteria" item="criteria" separator="or" >
+        <if test="criteria.valid" >
+          <trim prefix="(" suffix=")" prefixOverrides="and" >
+            <foreach collection="criteria.criteria" item="criterion" >
+              <choose >
+                <when test="criterion.noValue" >
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue" >
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue" >
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue" >
+                  and ${criterion.condition}
+                  <foreach collection="criterion.value" item="listItem" open="(" close=")" separator="," >
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Base_Column_List" >
+    ID, PILE_ID, EVENT_ID, DESCRIBED, LEVEL, EVENT_TIME
+  </sql>
+  <select id="selectByExample" resultMap="BaseResultMap" parameterType="com.holley.charging.dcs.dao.model.AlarmEventsExample" >
+    select
+    <if test="distinct" >
+      distinct
+    </if>
+    <include refid="Base_Column_List" />
+    from dcs_alarm_events
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null" >
+      order by ${orderByClause}
+    </if>
+  </select>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from dcs_alarm_events
+    where ID = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from dcs_alarm_events
+    where ID = #{id,jdbcType=INTEGER}
+  </delete>
+  <delete id="deleteByExample" parameterType="com.holley.charging.dcs.dao.model.AlarmEventsExample" >
+    delete from dcs_alarm_events
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+  </delete>
+  <insert id="insert" parameterType="com.holley.charging.dcs.dao.model.AlarmEvents" >
+    insert into dcs_alarm_events (ID, PILE_ID, EVENT_ID, 
+      DESCRIBED, LEVEL, EVENT_TIME
+      )
+    values (#{id,jdbcType=INTEGER}, #{pileId,jdbcType=INTEGER}, #{eventId,jdbcType=CHAR}, 
+      #{described,jdbcType=VARCHAR}, #{level,jdbcType=SMALLINT}, #{eventTime,jdbcType=TIMESTAMP}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.holley.charging.dcs.dao.model.AlarmEvents" >
+    insert into dcs_alarm_events
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        ID,
+      </if>
+      <if test="pileId != null" >
+        PILE_ID,
+      </if>
+      <if test="eventId != null" >
+        EVENT_ID,
+      </if>
+      <if test="described != null" >
+        DESCRIBED,
+      </if>
+      <if test="level != null" >
+        LEVEL,
+      </if>
+      <if test="eventTime != null" >
+        EVENT_TIME,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="pileId != null" >
+        #{pileId,jdbcType=INTEGER},
+      </if>
+      <if test="eventId != null" >
+        #{eventId,jdbcType=CHAR},
+      </if>
+      <if test="described != null" >
+        #{described,jdbcType=VARCHAR},
+      </if>
+      <if test="level != null" >
+        #{level,jdbcType=SMALLINT},
+      </if>
+      <if test="eventTime != null" >
+        #{eventTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <select id="countByExample" parameterType="com.holley.charging.dcs.dao.model.AlarmEventsExample" resultType="java.lang.Integer" >
+    select count(*) from dcs_alarm_events
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+  </select>
+  <update id="updateByExampleSelective" parameterType="map" >
+    update dcs_alarm_events
+    <set >
+      <if test="record.id != null" >
+        ID = #{record.id,jdbcType=INTEGER},
+      </if>
+      <if test="record.pileId != null" >
+        PILE_ID = #{record.pileId,jdbcType=INTEGER},
+      </if>
+      <if test="record.eventId != null" >
+        EVENT_ID = #{record.eventId,jdbcType=CHAR},
+      </if>
+      <if test="record.described != null" >
+        DESCRIBED = #{record.described,jdbcType=VARCHAR},
+      </if>
+      <if test="record.level != null" >
+        LEVEL = #{record.level,jdbcType=SMALLINT},
+      </if>
+      <if test="record.eventTime != null" >
+        EVENT_TIME = #{record.eventTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    <if test="_parameter != null" >
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByExample" parameterType="map" >
+    update dcs_alarm_events
+    set ID = #{record.id,jdbcType=INTEGER},
+      PILE_ID = #{record.pileId,jdbcType=INTEGER},
+      EVENT_ID = #{record.eventId,jdbcType=CHAR},
+      DESCRIBED = #{record.described,jdbcType=VARCHAR},
+      LEVEL = #{record.level,jdbcType=SMALLINT},
+      EVENT_TIME = #{record.eventTime,jdbcType=TIMESTAMP}
+    <if test="_parameter != null" >
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.holley.charging.dcs.dao.model.AlarmEvents" >
+    update dcs_alarm_events
+    <set >
+      <if test="pileId != null" >
+        PILE_ID = #{pileId,jdbcType=INTEGER},
+      </if>
+      <if test="eventId != null" >
+        EVENT_ID = #{eventId,jdbcType=CHAR},
+      </if>
+      <if test="described != null" >
+        DESCRIBED = #{described,jdbcType=VARCHAR},
+      </if>
+      <if test="level != null" >
+        LEVEL = #{level,jdbcType=SMALLINT},
+      </if>
+      <if test="eventTime != null" >
+        EVENT_TIME = #{eventTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.holley.charging.dcs.dao.model.AlarmEvents" >
+    update dcs_alarm_events
+    set PILE_ID = #{pileId,jdbcType=INTEGER},
+      EVENT_ID = #{eventId,jdbcType=CHAR},
+      DESCRIBED = #{described,jdbcType=VARCHAR},
+      LEVEL = #{level,jdbcType=SMALLINT},
+      EVENT_TIME = #{eventTime,jdbcType=TIMESTAMP}
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

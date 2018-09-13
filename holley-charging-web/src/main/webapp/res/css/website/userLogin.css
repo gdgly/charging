@@ -1,0 +1,109 @@
+.logincenter{
+	padding-left: 0;
+	padding-right: 0;
+	height: 100%;
+}
+.logincenter-head {
+    position: relative;
+    width: 100%;
+    color: #fdfdfe;
+    line-height: 50px;
+}
+
+.logincenter-head a,.logincenter-head a:hover{
+	color: #fff;
+	text-decoration: none;
+}
+
+.fn-clear {
+    zoom: 1;
+}
+
+.login-page {
+   width: 315px;
+   padding-bottom: 10px;
+   margin-top: 150px;
+   background-color: #fdfdfd;
+}
+
+.login-page ul li{
+	width: 50%;
+	text-align: center;
+}
+
+.login-page >.nav-tabs{
+	border-style: none;
+}
+
+.login-page >.nav-tabs > li.active > a, .login-page > .nav-tabs > li.active > a:hover,.login-page > .nav-tabs > li.active > a:focus,.login-page > .nav-tabs > li：hover {
+	color: #666b6f;
+	cursor: default;
+	background-color: #fdfdfe;
+	border: 0px solid #ddd;
+	border-bottom-color: transparent;
+	border-bottom: 2px solid #fdfdfe;
+}
+
+.login-page >.nav-tabs > li>a{
+	color: #fff;
+	background-color: #666b6f;
+	margin-left: 0;
+	margin-right: 0;
+	border-radius: 0;
+	font-size: 18px;
+	
+}
+
+.login-tip{
+	margin-left: 25px;
+	margin-right: 25px;
+	color: red; 
+	visibility: hidden;
+}
+
+.login-page .form-horizontal .form-group {
+    margin-right: 10px;
+    margin-left: 10px;
+}
+
+.forgetpwd,.forgetpwd:hover{
+	color: #0a94f2;
+	text-decoration: none;
+}
+
+.register,.register:hover{
+	color: #f49447;
+	text-decoration: none;
+}
+.login-btn{
+	background-color: #0a94f2;
+	color: #fff;
+}
+
+.login-page .form-horizontal .has-feedback .form-control-feedback {
+	top:6px;
+    left: 15px;
+    color: #cdcdcd;
+    font-size: 18px;
+}
+
+.input-lg {
+    height: 46px;
+    padding: 10px 40px;
+    font-size: 18px;
+    line-height: 1.3333333;
+    border-radius: 6px;
+}
+
+.authcenter-background {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    overflow: hidden;
+    z-index: -2;
+}
+
+
+

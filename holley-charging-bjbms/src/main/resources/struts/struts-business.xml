@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC  
+    "-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"  
+    "http://struts.apache.org/dtds/struts-2.3.dtd">   
+<struts>
+	<!--运营商管理 --> 
+	<package name="business" namespace="/business" extends="struts-base">
+		<!--运营商实名认证审核 -->
+		<action name="busRealVerifyList" class="busRealVerifyAction" method="init">
+			<result name="success">/jsp/business/busRealVerifyList.jsp</result>
+		</action>
+		<action name="busRealVerify" class="busRealVerifyAction" method="realInfoInit">
+			<result name="success">/jsp/business/busRealVerify.jsp</result>
+		</action>
+		<action name="busRealVerifyDetail" class="busRealVerifyAction" method="detailInit">
+			<result name="success">/jsp/business/busRealVerifyDetail.jsp</result>
+		</action>
+		<action name="busRealTransferList" class="busRealTransferAction" method="init">
+			<result name="success">/jsp/business/busRealTransferList.jsp</result>
+		</action>
+		<action name="busRealTransfer" class="busRealTransferAction" method="realInfoInit">
+			<result name="success">/jsp/business/busRealTransfer.jsp</result>
+		</action>
+		<action name="busRealTransferDetail" class="busRealTransferAction" method="detailInit">
+			<result name="success">/jsp/business/busRealTransferDetail.jsp</result>
+		</action>
+		<!--运营商信息查询 -->
+		<action name="busInfoList" class="busInfoAction" method="init">
+			<result name="success">/jsp/business/busInfoList.jsp</result>
+		</action>
+		<action name="busInfoDetail" class="busInfoAction" method="detailInit">
+			<result name="success">/jsp/business/busInfoDetail.jsp</result>
+		</action>
+	</package>
+	<package name="business_json" namespace="/business" extends="json-base">
+		<!--运营商实名认证审核 -->
+		<action name="busRealVerify_*" class="busRealVerifyAction" method="{1}">
+			<result type="json" />
+		</action>
+		<action name="busRealTransfer_*" class="busRealTransferAction" method="{1}">
+			<result type="json" />
+		</action>
+		<!--运营商信息查询 -->
+		<action name="busInfo_*" class="busInfoAction" method="{1}">
+			<result type="json" />
+		</action>
+	</package>
+</struts>

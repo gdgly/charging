@@ -1,0 +1,579 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.holley.charging.dao.bus.BusAccountLogMapper" >
+  <resultMap id="BaseResultMap" type="com.holley.charging.model.bus.BusAccountLog" >
+    <id column="ID" property="id" jdbcType="INTEGER" />
+    <result column="USER_ID" property="userId" jdbcType="INTEGER" />
+    <result column="RECORD_ID" property="recordId" jdbcType="INTEGER" />
+    <result column="ACCOUNT_INFO" property="accountInfo" jdbcType="VARCHAR" />
+    <result column="TYPE" property="type" jdbcType="SMALLINT" />
+    <result column="DIRECTION" property="direction" jdbcType="SMALLINT" />
+    <result column="TOTAL_MONEY" property="totalMoney" jdbcType="DECIMAL" />
+    <result column="OPERATE_MONEY" property="operateMoney" jdbcType="DECIMAL" />
+    <result column="USABLE_MONEY" property="usableMoney" jdbcType="DECIMAL" />
+    <result column="FREEZE_MONEY" property="freezeMoney" jdbcType="DECIMAL" />
+    <result column="REMARK" property="remark" jdbcType="VARCHAR" />
+    <result column="ADD_TIME" property="addTime" jdbcType="TIMESTAMP" />
+    <result column="ADD_IP" property="addIp" jdbcType="VARCHAR" />
+  </resultMap>
+  <resultMap id="AccountLogResultMap" type="com.holley.charging.model.bus.BusAccountLog" extends="BaseResultMap">
+    <result column="USERNAME" property="username" jdbcType="VARCHAR" />
+    <result column="USER_TYPE" property="usertype" jdbcType="VARCHAR" />
+    <result column="PHONE" property="phone" jdbcType="VARCHAR" />
+    <result column="realName" property="realName" jdbcType="VARCHAR" />
+  </resultMap>
+  <sql id="Example_Where_Clause" >
+    <where >
+      <foreach collection="oredCriteria" item="criteria" separator="or" >
+        <if test="criteria.valid" >
+          <trim prefix="(" suffix=")" prefixOverrides="and" >
+            <foreach collection="criteria.criteria" item="criterion" >
+              <choose >
+                <when test="criterion.noValue" >
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue" >
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue" >
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue" >
+                  and ${criterion.condition}
+                  <foreach collection="criterion.value" item="listItem" open="(" close=")" separator="," >
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause" >
+    <where >
+      <foreach collection="example.oredCriteria" item="criteria" separator="or" >
+        <if test="criteria.valid" >
+          <trim prefix="(" suffix=")" prefixOverrides="and" >
+            <foreach collection="criteria.criteria" item="criterion" >
+              <choose >
+                <when test="criterion.noValue" >
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue" >
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue" >
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue" >
+                  and ${criterion.condition}
+                  <foreach collection="criterion.value" item="listItem" open="(" close=")" separator="," >
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Base_Column_List" >
+    ID, USER_ID, RECORD_ID, ACCOUNT_INFO, TYPE, DIRECTION, TOTAL_MONEY, OPERATE_MONEY, 
+    USABLE_MONEY, FREEZE_MONEY, REMARK, ADD_TIME, ADD_IP
+  </sql>
+  <select id="selectByExample" resultMap="BaseResultMap" parameterType="com.holley.charging.model.bus.BusAccountLogExample" >
+    select
+    <if test="distinct" >
+      distinct
+    </if>
+    <include refid="Base_Column_List" />
+    from bus_account_log
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null" >
+      order by ${orderByClause}
+    </if>
+  </select>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from bus_account_log
+    where ID = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from bus_account_log
+    where ID = #{id,jdbcType=INTEGER}
+  </delete>
+  <delete id="deleteByExample" parameterType="com.holley.charging.model.bus.BusAccountLogExample" >
+    delete from bus_account_log
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+  </delete>
+  <insert id="insert" parameterType="com.holley.charging.model.bus.BusAccountLog" >
+    insert into bus_account_log (ID, USER_ID, RECORD_ID, 
+      ACCOUNT_INFO, TYPE, DIRECTION, 
+      TOTAL_MONEY, OPERATE_MONEY, USABLE_MONEY, 
+      FREEZE_MONEY, REMARK, ADD_TIME, 
+      ADD_IP)
+    values (#{id,jdbcType=INTEGER}, #{userId,jdbcType=INTEGER}, #{recordId,jdbcType=INTEGER}, 
+      #{accountInfo,jdbcType=VARCHAR}, #{type,jdbcType=SMALLINT}, #{direction,jdbcType=SMALLINT}, 
+      #{totalMoney,jdbcType=DECIMAL}, #{operateMoney,jdbcType=DECIMAL}, #{usableMoney,jdbcType=DECIMAL}, 
+      #{freezeMoney,jdbcType=DECIMAL}, #{remark,jdbcType=VARCHAR}, #{addTime,jdbcType=TIMESTAMP}, 
+      #{addIp,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.holley.charging.model.bus.BusAccountLog" >
+    insert into bus_account_log
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        ID,
+      </if>
+      <if test="userId != null" >
+        USER_ID,
+      </if>
+      <if test="recordId != null" >
+        RECORD_ID,
+      </if>
+      <if test="accountInfo != null" >
+        ACCOUNT_INFO,
+      </if>
+      <if test="type != null" >
+        TYPE,
+      </if>
+      <if test="direction != null" >
+        DIRECTION,
+      </if>
+      <if test="totalMoney != null" >
+        TOTAL_MONEY,
+      </if>
+      <if test="operateMoney != null" >
+        OPERATE_MONEY,
+      </if>
+      <if test="usableMoney != null" >
+        USABLE_MONEY,
+      </if>
+      <if test="freezeMoney != null" >
+        FREEZE_MONEY,
+      </if>
+      <if test="remark != null" >
+        REMARK,
+      </if>
+      <if test="addTime != null" >
+        ADD_TIME,
+      </if>
+      <if test="addIp != null" >
+        ADD_IP,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="userId != null" >
+        #{userId,jdbcType=INTEGER},
+      </if>
+      <if test="recordId != null" >
+        #{recordId,jdbcType=INTEGER},
+      </if>
+      <if test="accountInfo != null" >
+        #{accountInfo,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null" >
+        #{type,jdbcType=SMALLINT},
+      </if>
+      <if test="direction != null" >
+        #{direction,jdbcType=SMALLINT},
+      </if>
+      <if test="totalMoney != null" >
+        #{totalMoney,jdbcType=DECIMAL},
+      </if>
+      <if test="operateMoney != null" >
+        #{operateMoney,jdbcType=DECIMAL},
+      </if>
+      <if test="usableMoney != null" >
+        #{usableMoney,jdbcType=DECIMAL},
+      </if>
+      <if test="freezeMoney != null" >
+        #{freezeMoney,jdbcType=DECIMAL},
+      </if>
+      <if test="remark != null" >
+        #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="addTime != null" >
+        #{addTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="addIp != null" >
+        #{addIp,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <select id="countByExample" parameterType="com.holley.charging.model.bus.BusAccountLogExample" resultType="java.lang.Integer" >
+    select count(*) from bus_account_log
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+  </select>
+  <update id="updateByExampleSelective" parameterType="map" >
+    update bus_account_log
+    <set >
+      <if test="record.id != null" >
+        ID = #{record.id,jdbcType=INTEGER},
+      </if>
+      <if test="record.userId != null" >
+        USER_ID = #{record.userId,jdbcType=INTEGER},
+      </if>
+      <if test="record.recordId != null" >
+        RECORD_ID = #{record.recordId,jdbcType=INTEGER},
+      </if>
+      <if test="record.accountInfo != null" >
+        ACCOUNT_INFO = #{record.accountInfo,jdbcType=VARCHAR},
+      </if>
+      <if test="record.type != null" >
+        TYPE = #{record.type,jdbcType=SMALLINT},
+      </if>
+      <if test="record.direction != null" >
+        DIRECTION = #{record.direction,jdbcType=SMALLINT},
+      </if>
+      <if test="record.totalMoney != null" >
+        TOTAL_MONEY = #{record.totalMoney,jdbcType=DECIMAL},
+      </if>
+      <if test="record.operateMoney != null" >
+        OPERATE_MONEY = #{record.operateMoney,jdbcType=DECIMAL},
+      </if>
+      <if test="record.usableMoney != null" >
+        USABLE_MONEY = #{record.usableMoney,jdbcType=DECIMAL},
+      </if>
+      <if test="record.freezeMoney != null" >
+        FREEZE_MONEY = #{record.freezeMoney,jdbcType=DECIMAL},
+      </if>
+      <if test="record.remark != null" >
+        REMARK = #{record.remark,jdbcType=VARCHAR},
+      </if>
+      <if test="record.addTime != null" >
+        ADD_TIME = #{record.addTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="record.addIp != null" >
+        ADD_IP = #{record.addIp,jdbcType=VARCHAR},
+      </if>
+    </set>
+    <if test="_parameter != null" >
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByExample" parameterType="map" >
+    update bus_account_log
+    set ID = #{record.id,jdbcType=INTEGER},
+      USER_ID = #{record.userId,jdbcType=INTEGER},
+      RECORD_ID = #{record.recordId,jdbcType=INTEGER},
+      ACCOUNT_INFO = #{record.accountInfo,jdbcType=VARCHAR},
+      TYPE = #{record.type,jdbcType=SMALLINT},
+      DIRECTION = #{record.direction,jdbcType=SMALLINT},
+      TOTAL_MONEY = #{record.totalMoney,jdbcType=DECIMAL},
+      OPERATE_MONEY = #{record.operateMoney,jdbcType=DECIMAL},
+      USABLE_MONEY = #{record.usableMoney,jdbcType=DECIMAL},
+      FREEZE_MONEY = #{record.freezeMoney,jdbcType=DECIMAL},
+      REMARK = #{record.remark,jdbcType=VARCHAR},
+      ADD_TIME = #{record.addTime,jdbcType=TIMESTAMP},
+      ADD_IP = #{record.addIp,jdbcType=VARCHAR}
+    <if test="_parameter != null" >
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.holley.charging.model.bus.BusAccountLog" >
+    update bus_account_log
+    <set >
+      <if test="userId != null" >
+        USER_ID = #{userId,jdbcType=INTEGER},
+      </if>
+      <if test="recordId != null" >
+        RECORD_ID = #{recordId,jdbcType=INTEGER},
+      </if>
+      <if test="accountInfo != null" >
+        ACCOUNT_INFO = #{accountInfo,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null" >
+        TYPE = #{type,jdbcType=SMALLINT},
+      </if>
+      <if test="direction != null" >
+        DIRECTION = #{direction,jdbcType=SMALLINT},
+      </if>
+      <if test="totalMoney != null" >
+        TOTAL_MONEY = #{totalMoney,jdbcType=DECIMAL},
+      </if>
+      <if test="operateMoney != null" >
+        OPERATE_MONEY = #{operateMoney,jdbcType=DECIMAL},
+      </if>
+      <if test="usableMoney != null" >
+        USABLE_MONEY = #{usableMoney,jdbcType=DECIMAL},
+      </if>
+      <if test="freezeMoney != null" >
+        FREEZE_MONEY = #{freezeMoney,jdbcType=DECIMAL},
+      </if>
+      <if test="remark != null" >
+        REMARK = #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="addTime != null" >
+        ADD_TIME = #{addTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="addIp != null" >
+        ADD_IP = #{addIp,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.holley.charging.model.bus.BusAccountLog" >
+    update bus_account_log
+    set USER_ID = #{userId,jdbcType=INTEGER},
+      RECORD_ID = #{recordId,jdbcType=INTEGER},
+      ACCOUNT_INFO = #{accountInfo,jdbcType=VARCHAR},
+      TYPE = #{type,jdbcType=SMALLINT},
+      DIRECTION = #{direction,jdbcType=SMALLINT},
+      TOTAL_MONEY = #{totalMoney,jdbcType=DECIMAL},
+      OPERATE_MONEY = #{operateMoney,jdbcType=DECIMAL},
+      USABLE_MONEY = #{usableMoney,jdbcType=DECIMAL},
+      FREEZE_MONEY = #{freezeMoney,jdbcType=DECIMAL},
+      REMARK = #{remark,jdbcType=VARCHAR},
+      ADD_TIME = #{addTime,jdbcType=TIMESTAMP},
+      ADD_IP = #{addIp,jdbcType=VARCHAR}
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+  
+  <select id="selectAccountBillByPage" parameterType="java.util.Map" resultType="com.holley.charging.model.app.BillInfo">
+  	SELECT t.* FROM(
+  		<!-- 充值 -->
+	  	SELECT l.USER_ID as id,l.ADD_TIME as datatime,l.direction,1 as type ,l.OPERATE_MONEY as fee
+		FROM bus_account_log l
+		WHERE l.TYPE = 1
+		<if test="isGroup == null">
+		AND l.USER_ID = #{userid}
+		</if>
+		<if test="isGroup != null">
+		AND l.USER_ID in
+  	 		<foreach item="item" index="index" collection="list" open="(" separator="," close=")">  
+  				#{item}  
+ 	 		</foreach>
+		</if>
+		
+		<if test="startdate != null">
+			AND l.ADD_TIME &gt;= #{startdate}
+		</if>
+		<if test="enddate != null">
+			AND l.ADD_TIME &lt; #{enddate}
+		</if>
+		
+		UNION ALL 
+		
+		<!-- 充电支出 -->
+		SELECT pay.PILE_ID as id,l.ADD_TIME as datatime,l.direction,2 as type ,l.OPERATE_MONEY as fee
+		FROM bus_account_log l,bus_payment pay
+		WHERE l.RECORD_ID = pay.ID
+		AND l.TYPE = 2
+		<if test="isGroup == null">
+		AND l.USER_ID = #{userid}
+		</if>
+		<if test="isGroup != null">
+		AND l.USER_ID in
+  	 		<foreach item="item" index="index" collection="list" open="(" separator="," close=")">  
+  				#{item}  
+ 	 		</foreach>
+		</if>
+		<if test="startdate != null">
+			AND l.ADD_TIME &gt;= #{startdate}
+		</if>
+		<if test="enddate != null">
+			AND l.ADD_TIME &lt; #{enddate}
+		</if>
+		
+		UNION ALL
+		
+		<!-- 预约支出 -->
+		SELECT app.PILE_ID as id,l.ADD_TIME as datatime,l.direction,3 as type ,l.OPERATE_MONEY as fee
+		FROM bus_account_log l,bus_appointment app
+		WHERE l.RECORD_ID = app.ID
+		AND l.TYPE = 4
+		<if test="isGroup == null">
+		AND l.USER_ID = #{userid}
+		</if>
+		<if test="isGroup != null">
+		AND l.USER_ID in
+  	 		<foreach item="item" index="index" collection="list" open="(" separator="," close=")">  
+  				#{item}  
+ 	 		</foreach>
+		</if>
+		<if test="startdate != null">
+			AND l.ADD_TIME &gt;= #{startdate}
+		</if>
+		<if test="enddate != null">
+			AND l.ADD_TIME &lt; #{enddate}
+		</if>
+		
+		UNION ALL
+		
+		<!-- 提现 -->
+		SELECT l.USER_ID as id,l.ADD_TIME as datatime,l.direction,4 as type ,l.OPERATE_MONEY as fee
+		FROM bus_account_log l
+		WHERE l.TYPE = 7
+		AND l.DIRECTION = 2
+		<if test="isGroup == null">
+		AND l.USER_ID = #{userid}
+		</if>
+		<if test="isGroup != null">
+		AND l.USER_ID in
+  	 		<foreach item="item" index="index" collection="list" open="(" separator="," close=")">  
+  				#{item}  
+ 	 		</foreach>
+		</if>
+		<if test="startdate != null">
+			AND l.ADD_TIME &gt;= #{startdate}
+		</if>
+		<if test="enddate != null">
+			AND l.ADD_TIME &lt; #{enddate}
+		</if>
+		
+		UNION ALL
+		
+		<!-- 充电收入-->
+		SELECT pay.PILE_ID as id,bill.ADD_TIME as datatime,1 as direction,2 as type ,
+					 IFNULL(bill.CHA_FEE_IN,0)+IFNULL(bill.PARK_FEE_IN,0)+IFNULL(bill.SERVICE_FEE_IN,0) as fee
+		FROM bus_bills_detail bill,bus_payment pay
+		WHERE bill.RECORD_ID = pay.ID
+		AND bill.CHECK_MARK = 1
+		<if test="isGroup == null">
+		AND bill.USER_ID = #{userid}
+		</if>
+		<if test="isGroup != null">
+		AND bill.USER_ID in
+  	 		<foreach item="item" index="index" collection="list" open="(" separator="," close=")">  
+  				#{item}  
+ 	 		</foreach>
+		</if>
+		
+		<if test="startdate != null">
+			AND bill.ADD_TIME &gt;= #{startdate}
+		</if>
+		<if test="enddate != null">
+		AND bill.ADD_TIME &lt; #{enddate}
+		</if>
+		
+		UNION ALL
+		
+		<!-- 预约收入-->
+		SELECT app.PILE_ID as id,bill.ADD_TIME as datatime,1 as direction,3 as type ,bill.APP_FEE_IN as fee
+		FROM bus_bills_detail bill,bus_appointment app
+		WHERE bill.RECORD_ID = app.ID
+		AND bill.CHECK_MARK = 2
+		<if test="isGroup == null">
+		AND bill.USER_ID = #{userid}
+		</if>
+		<if test="isGroup != null">
+		AND bill.USER_ID in
+  	 		<foreach item="item" index="index" collection="list" open="(" separator="," close=")">  
+  				#{item}  
+ 	 		</foreach>
+		</if>
+		<if test="startdate != null">
+			AND bill.ADD_TIME &gt;= #{startdate}
+		</if>
+		<if test="enddate != null">
+			AND bill.ADD_TIME &lt; #{enddate}
+		</if>
+	) t
+		WHERE 1 = 1
+		<if test="type != null">
+			AND t.TYPE = #{type}
+		</if>
+	ORDER BY t.datatime DESC
+  </select>
+  
+  <select id="selectAccountLogByPage" parameterType="java.util.Map" resultMap="AccountLogResultMap">
+  	SELECT l.ID,l.USER_ID,l.RECORD_ID,l.ACCOUNT_INFO,l.ADD_IP,l.ADD_TIME,l.DIRECTION,l.FREEZE_MONEY,
+       	   l.OPERATE_MONEY,l.REMARK,l.TOTAL_MONEY,l.TYPE,l.USABLE_MONEY,u.USERNAME,u.PHONE,u.USER_TYPE
+	FROM bus_account_log l,bus_user u,bus_user_info info
+	WHERE l.USER_ID = u.ID
+	AND u.INFO_ID = info.ID
+	<if test="groupId != null">
+		AND u.GROUP_ID = #{groupId}
+	</if>
+	<if test="keyword != null">
+		AND (info.REAL_NAME LIKE concat('%',#{keyword},'%' )  OR u.PHONE LIKE concat('%',#{keyword},'%' ))
+	</if>
+	<if test="usertype != null">
+		AND u.USER_TYPE = #{usertype}
+	</if>
+	<if test="type != null">
+		AND l.TYPE = #{type}
+	</if>
+	<if test="direction != null">
+		AND l.DIRECTION = #{direction}
+	</if>
+	<if test="startdate != null">
+		AND l.ADD_TIME &gt;= #{startdate}
+	</if>
+	<if test="enddate != null">
+		AND l.ADD_TIME &lt; #{enddate}
+	</if>
+	ORDER BY l.ADD_TIME DESC
+  </select>
+  <!-- 分页查询消费明细 -->
+  <select id="selectOutAccountBillByPage" parameterType="java.util.Map" resultType="com.holley.charging.model.app.BillInfo">
+  	select t.* from (
+  		<!-- select log.USER_ID as id,log.ADD_TIME as datatime,log.direction,1 as type ,log.OPERATE_MONEY as fee
+		from bus_account_log log
+		where log.TYPE = 1
+		and log.USER_ID = #{userId}
+		<if test="startDate != null">
+		and log.ADD_TIME &gt;= #{startDate}
+		</if>
+		<if test="endDate != null">
+		and log.ADD_TIME &lt; #{endDate}
+		</if>
+	union all -->
+	  	<!-- 预约 -->
+	  	select app.PILE_ID as id,log.ADD_TIME as datatime,log.direction,3 as type ,log.OPERATE_MONEY as fee 
+	  	from bus_account_log log,bus_appointment app
+		where log.RECORD_ID = app.ID
+		<if test="isGroup == null">
+		and log.USER_ID = #{userId}
+		</if>
+		<if test="isGroup != null">
+		and log.USER_ID in
+  	 		<foreach item="item" index="index" collection="list" open="(" separator="," close=")">  
+  				#{item}  
+ 	 		</foreach>
+		</if>
+		and (log.type = 4 or log.type = 5)
+		<if test="startDate != null">
+		and log.ADD_TIME &gt;= #{startDate}
+		</if>
+		<if test="endDate != null">
+		and log.ADD_TIME &lt; #{endDate}
+		</if>
+	union all
+		 <!-- 充电 -->
+		select pay.PILE_ID as id,log.ADD_TIME as datatime,log.direction,2 as type ,log.OPERATE_MONEY as fee 
+		from bus_account_log log,bus_payment pay
+		where log.RECORD_ID = pay.ID
+		<if test="isGroup == null">
+		and log.USER_ID = #{userId}
+		</if>
+		<if test="isGroup != null">
+		and log.USER_ID in
+  	 		<foreach item="item" index="index" collection="list" open="(" separator="," close=")">  
+  				#{item}  
+ 	 		</foreach>
+		</if>
+		and (log.type = 2 or log.type = 3)
+		<if test="startDate != null">
+		and log.ADD_TIME &gt;= #{startDate}
+		</if>
+		<if test="endDate != null">
+		and log.ADD_TIME &lt; #{endDate}
+		</if>
+	) t
+	order by t.datatime desc
+  </select>
+</mapper>

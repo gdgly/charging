@@ -1,0 +1,176 @@
+@charset "utf-8";
+/* html, body, * {font-family: "Microsoft YaHei" ! important; } */
+/*  返回*/
+.back-head {
+    position: relative;
+    width: 100%;
+    color: #fdfdfe;
+    line-height: 50px;
+}
+.back-head a,.back-head a:hover{
+	color: #fff;
+	text-decoration: none;
+}
+
+.center-vertical {
+    position:relative;
+    top:50%;
+    transform:translateY(-50%);
+}
+
+.box-shadow{  
+  -webkit-box-shadow:0 0 20px rgba(128, 128, 128, .8);   
+  -moz-box-shadow:0 0 20px rgba(128, 128, 128, .8);  
+  box-shadow:0 0 20px rgba(128, 128, 128, .8);  
+} 
+.startImg{ 
+	background-color:#ddd;
+    background-repeat:no-repeat;
+    background-position:-70px;
+    width: 50px;
+}
+/*  Mixin */
+.center-block() {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+.center2() {
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+.box-shadow2{  
+/*   -webkit-box-shadow:0 5px 2px rgba(128, 128, 128, .8);   
+  -moz-box-shadow:0 5px 2px rgba(128, 128, 128, .8);  */ 
+  box-shadow:0 1px 1px rgba(128, 128, 128, .8);  
+  background-color: #D9D9D9;
+ width: 100%;
+} 
+.fullscreen {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+}
+
+.popover{
+	max-width: 2000px;
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+.page-btn{
+	padding: 0 0;
+	margin-top:-5px;
+	background: transparent;
+	border: none;
+	outline: none;
+}
+/* 网站CSS */
+
+/* 字体改为雅黑 */
+body,button, input, select, textarea,h1 ,h2, h3, h4, h5, h6 { font-family: Microsoft YaHei,'宋体' , Tahoma, Helvetica, Arial, "\5b8b\4f53", sans-serif;}
+
+/* 菜单样式 */
+.navbar {
+    border-radius: 0;
+    margin-bottom: 0;
+    border-style: none;
+}
+
+.navbar-inverse {
+    background-color: #1d2f3b;
+    border-color: #080808;
+}
+
+.navbar-form {
+    margin-top: 0;
+    margin-bottom: 0;
+    height:50px;
+}
+
+.navbar-inverse .navbar-brand {
+    color: #0a94f2;
+}
+
+.nav-li{
+    list-style: none;
+    display: inline-block;
+    position: relative;
+}
+
+.navbar-nav>li {
+	list-style: none;
+    display: inline-block;
+    position: relative;
+    width:100px;
+}
+
+.navbar-nav>li:hover {
+	background-color: #555555;
+}
+
+.navbar-nav>li>a {
+    padding-top: 15px;
+    padding-bottom: 15px;
+    text-align: center;
+}
+
+.navbar-inverse .navbar-nav>li>a {
+    color: #0a94f2;
+}
+
+.navbar-inverse .navbar-nav>.active>a, .navbar-inverse .navbar-nav>.active>a:focus, .navbar-inverse .navbar-nav>.active>a:hover {
+    background-color: #0a94f2;
+    list-style: none;
+}
+
+/* 首页-页脚 */
+.main-footer {
+    background: #a8a8a8;
+}
+
+/* 中间容器 */
+.main{
+	margin-top:50px;
+}
+
+.loadMoreBtn{
+    width: 100%;
+    height: 40px;
+	border-style: none;
+    background-color: #f0f0f0
+}
+.noMoreText{
+	height: 40px;
+	line-height: 40px;
+	background-color: #f0f0f0;
+}
+
+.loadMoreBtn,.loadMoreBtn:active,.loadMoreBtn:hover,.loadMoreBtn:focus,.loadMoreBtn:keydown{
+   border-style: none;
+}
+
+.xcConfirm .popBox .ttBox {
+    height: 50px;
+    line-height: 30px;
+    padding: 14px 30px;
+    border-bottom: solid 1px #eef0f1;
+}
+.loading{  
+    width:160px;
+    height:56px;
+    position: absolute;
+    top:50%;
+    left:50%;
+    line-height:56px;
+    color:#fff;
+    padding-left:60px;
+    font-size:15px;
+    background: #000 url(http://img.my.csdn.net/uploads/201211/14/1352886927_7549.gif) no-repeat 10px 50%;
+    z-index:9999;  
+    -moz-border-radius:20px;
+    -webkit-border-radius:20px;
+    border-radius:20px;
+    filter:progid:DXImageTransform.Microsoft.Alpha(opacity=70);
+}

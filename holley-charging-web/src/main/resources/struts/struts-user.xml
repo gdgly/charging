@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC  
+    "-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"  
+    "http://struts.apache.org/dtds/struts-2.3.dtd">  
+<struts>
+	<package name="userAdmin" namespace="/userAdmin" extends="struts-base">
+	<default-interceptor-ref name="userSessiondefault"></default-interceptor-ref>
+		<action name="home" class="userAction" method="init">
+			<result name="success">/jsp/user/init.jsp</result>
+		</action>
+		<!-- 个人首页 -->
+		<action name="initUserHome" class="userAction" method="initUserHome">
+			<result name="success">/jsp/user/userHome.jsp</result>
+		</action>
+		<!-- 个人资料 -->
+		<action name="initUserInfo" class="userAction" method="initUserInfo">
+			<result name="success">/jsp/user/personal/userInfo.jsp</result>
+		</action>
+		<!-- 个人爱车 -->
+		<action name="initUserCar" class="userAction" method="initUserCar">
+			<result name="success">/jsp/user/personal/userCar.jsp</result>
+		</action>
+		<!-- 个人实名 -->
+		<action name="initUserReal" class="userAction" method="initUserReal">
+			<result name="success">/jsp/user/personal/userReal.jsp</result>
+		</action>
+		<!-- 个人收藏 -->
+		<action name="initUserFavorite" class="userAction" method="initUserFavorite">
+			<result name="success">/jsp/user/personal/userFavorite.jsp</result>
+		</action>
+		<!-- 个人消息 -->
+		<action name="initUserMsg" class="userAction" method="initUserMsg">
+			<result name="success">/jsp/user/personal/userMsg.jsp</result>
+		</action>
+		<action name="validChangePwd" class="userAction" method="validChangePwd">
+			<result name="success">/jsp/user/personal/validUserInfo.jsp</result>
+		</action>
+		<action name="validChangePhone" class="userAction" method="validChangePhone">
+			<result name="success">/jsp/user/personal/validUserInfo.jsp</result>
+		</action>
+		<action name="validChangeEmail" class="userAction" method="validChangeEmail">
+			<result name="success">/jsp/user/personal/validUserInfo.jsp</result>
+		</action>
+		<action name="changePwd" class="userAction" method="changePwd">
+			<result name="success">/jsp/user/personal/changePwd.jsp</result>
+			<result name="member" type="redirectAction">initUserInfo</result>
+		</action>
+		<action name="changePhone" class="userAction" method="changePhone">
+			<result name="success">/jsp/user/personal/changePhone.jsp</result>
+			<result name="member" type="redirectAction">initUserInfo</result>
+		</action>
+		<action name="changeEmail" class="userAction" method="changeEmail">
+			<result name="success">/jsp/user/personal/changeEmail.jsp</result>
+			<result name="member" type="redirectAction">initUserInfo</result>
+		</action>
+		<action name="initGroupUserManagement" class="userAction" method="initGroupUserManagement">
+			<result name="success">/jsp/user/groupuser/userManagement.jsp</result>
+		</action>
+	</package>
+	<package name="userAccount" namespace="/userAccount" extends="struts-base">
+	<default-interceptor-ref name="userSessiondefault"></default-interceptor-ref>
+		<!-- 我的充值 -->
+		<action name="initUserRecharge" class="userAccountAction" method="initUserRecharge">
+			<result name="success">/jsp/user/account/userRecharge.jsp</result>
+		</action>
+		<action name="initUserAppointment" class="userAccountAction" method="initUserAppointment">
+			<result name="success">/jsp/user/account/userAppointment.jsp</result>
+		</action>
+		<action name="initUserCharge" class="userAccountAction" method="initUserCharge">
+			<result name="success">/jsp/user/account/userCharge.jsp</result>
+		</action>
+		<action name="initUserBill" class="userAccountAction" method="initUserBill">
+			<result name="success">/jsp/user/account/userBill.jsp</result>
+		</action>
+		<action name="initUserInvoice" class="userAccountAction" method="initUserInvoice">
+			<result name="success">/jsp/user/account/userInvoice.jsp</result>
+		</action>
+		<action name="initUserAccount" class="userAccountAction" method="initUserAccount">
+			<result name="success">/jsp/user/account/userAccount.jsp</result>
+		</action>
+		<action name="aliPay" class="userAccountAction" method="aliPay">
+			<result name="success">/jsp/user/account/userAliPayForm.jsp</result>
+		</action>
+		<action name="returnAliPay" class="userAccountAction" method="returnAliPay">
+		<interceptor-ref name="mydefault"></interceptor-ref>
+		<result name="success" type="redirectAction">
+			<param name="namespace">/userAdmin</param>
+			<param name="actionName">home?tradeStatus=${tradeStatus}</param>
+			<!-- <param name="tradeStatus">${tradeStatus}</param> -->
+		</result>
+		</action>
+		<action name="notifyAliPay" class="userAccountAction" method="notifyAliPay">
+		<interceptor-ref name="mydefault"></interceptor-ref>
+		</action>
+		<action name="wechatPay" class="userAccountAction" method="wechatPay">
+			<result name="success">/jsp/user/account/userWechatPayForm.jsp</result>
+		</action>
+		<action name="createQRCode" class="userAccountAction" method="createQRCode">
+		</action>
+	</package>
+	<package name="userDevice" namespace="/userDevice" extends="struts-base">
+	<default-interceptor-ref name="userAddCheckRuleStack"></default-interceptor-ref>
+		<action name="initUserDeviceAlarm" class="userDeviceAction" method="initUserDeviceAlarm">
+			<result name="success">/jsp/user/device/userDeviceAlarm.jsp</result>
+		</action>
+		<action name="initUserDeviceMap" class="userDeviceAction" method="initUserDeviceMap">
+			<result name="success">/jsp/user/device/userDeviceMap.jsp</result>
+		</action>
+		<action name="initUserDevice" class="userDeviceAction" method="initUserDevice">
+			<result name="success">/jsp/user/device/userDevice.jsp</result>
+		</action>
+	 	<action name="searchAllOnlinePileList" class="userDeviceAction" method="searchAllOnlinePileList">
+			<result name="success">/jsp/user/device/userOnlineDevice.jsp</result>
+		</action>
+		<action name="addUserNewPile" class="userDeviceAction" method="addUserNewPile">
+			<result name="success">/jsp/user/device/addUserDevicePile.jsp</result>
+			<result name="member" type="redirectAction">initUserDevice</result>
+		</action>
+		<action name="addUserValidPile" class="userDeviceAction" method="addUserValidPile">
+			<result name="success">/jsp/user/device/addUserDevicePile.jsp</result>
+			<result name="member" type="redirectAction">initUserDevice</result>
+		</action>
+		<action name="showUserVlaidDeviceDetail" class="userDeviceAction" method="showUserVlaidDeviceDetail">
+			<result name="station">/jsp/user/device/userDeviceStationDetail.jsp</result>
+			<result name="pile">/jsp/user/device/userDevicePileDetail.jsp</result>
+		</action>
+		<action name="showUserUnVlaidDeviceDetail" class="userDeviceAction" method="showUserUnVlaidDeviceDetail">
+			<result name="station">/jsp/user/device/userDeviceStationDetail.jsp</result>
+			<result name="pile">/jsp/user/device/userDevicePileDetail.jsp</result>
+		</action>
+		<action name="initUserUnDevice" class="userDeviceAction" method="initUserUnDevice">
+			<result name="success">/jsp/user/device/userUnDevice.jsp</result>
+		</action>
+		<action name="editValidStation" class="userDeviceAction" method="editValidStation">
+			<result name="success">/jsp/user/device/editUserDeviceStation.jsp</result>
+			<result name="member" type="redirectAction">initUserDevice</result>
+		</action>
+		<action name="editValidPile" class="userDeviceAction" method="editValidPile">
+			<result name="success">/jsp/user/device/editUserDevicePile.jsp</result>
+			<result name="member" type="redirectAction">initUserDevice</result>
+		</action>
+		<action name="editNewPile" class="userDeviceAction" method="editNewPile">
+			<result name="success">/jsp/user/device/editUserDevicePile.jsp</result>
+			<result name="member" type="redirectAction">initUserUnDevice</result>
+		</action>
+		<action name="addNewStationPile" class="userDeviceAction" method="addNewStationPile">
+			<result name="success">/jsp/user/device/addUserDevicePile.jsp</result>
+			<result name="member" type="redirectAction">initUserUnDevice</result>
+		</action>
+		<action name="editNewStation" class="userDeviceAction" method="editNewStation">
+			<result name="success">/jsp/user/device/editUserDeviceStation.jsp</result>
+			<result name="member" type="redirectAction">initUserUnDevice</result>
+		</action>
+	</package>
+	<package name="userTransaction" namespace="/userTransaction" extends="struts-base">
+	<default-interceptor-ref name="userAddCheckRuleStack"></default-interceptor-ref>
+		<action name="initUserDeviceAppointment" class="userTransactionAction" method="initUserDeviceAppointment">
+			<result name="success">/jsp/user/transaction/userDeviceAppointment.jsp</result>
+		</action>
+		<action name="initUserDeviceCharge" class="userTransactionAction" method="initUserDeviceCharge">
+			<result name="success">/jsp/user/transaction/userDeviceCharge.jsp</result>
+		</action>
+		<action name="initUserCash" class="userTransactionAction" method="initUserCash">
+			<result name="success">/jsp/user/transaction/userCash.jsp</result>
+		</action>
+		<action name="initUserProfit" class="userTransactionAction" method="initUserProfit">
+			<result name="success">/jsp/user/transaction/userProfit.jsp</result>
+		</action>
+		<action name="initUserDeviceBill" class="userTransactionAction" method="initUserDeviceBill">
+			<result name="success">/jsp/user/transaction/userDeviceBill.jsp</result>
+		</action>
+	</package>
+	
+	<package name="userjson" namespace="/userjson" extends="json-base">
+		<action name="personal_*" class="userAction" method="{1}">
+				<result type="json" name="success" />
+		</action>
+		
+		<action name="account_*" class="userAccountAction" method="{1}">
+				<result type="json" name="success" />
+		</action>
+		<action name="payAccount_*" class="userAccountAction" method="{1}">
+		<interceptor-ref name="jsonNoSessionDefault"></interceptor-ref>
+				<result type="json" name="success" />
+		</action>
+		<action name="device_*" class="userDeviceAction" method="{1}">
+				<result type="json" name="success" />
+		</action>
+		
+		<action name="transaction_*" class="userTransactionAction" method="{1}">
+				<result type="json" name="success" />
+		</action>
+	</package>
+</struts>

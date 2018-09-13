@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://www.mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration> 
+	<properties>    
+    	<property name="dialect" value="oracle"/>    
+    </properties>   
+	<mappers>
+		<mapper resource="com/holley/charging/dcs/dao/xml/PobPileMapper.xml"/>
+		<mapper resource="com/holley/charging/dcs/dao/xml/AlarmEventsMapper.xml"/>
+		<mapper resource="com/holley/charging/dcs/dao/xml/ChargeRecordMapper.xml"/>
+		<mapper resource="com/holley/charging/dcs/dao/xml/DcsBaseDataTypeMapper.xml"/>
+		<mapper resource="com/holley/charging/dcs/dao/xml/DcsHisYcMapper.xml"/>
+		<mapper resource="com/holley/charging/dcs/dao/xml/DcsHisYxMapper.xml"/>
+		<mapper resource="com/holley/charging/dcs/dao/xml/DcsHisYaMapper.xml"/>
+		<mapper resource="com/holley/charging/dcs/dao/xml/FeeModelMapper.xml"/>
+		<mapper resource="com/holley/charging/dcs/dao/xml/PileFeeModelMapper.xml"/>
+		<mapper resource="com/holley/charging/dcs/dao/xml/PayMentRecMapper.xml"/>
+		<mapper resource="com/holley/charging/dcs/dao/xml/UserMapper.xml"/>
+		<mapper resource="com/holley/charging/dcs/dao/xml/AppointmentRecMapper.xml"/>
+		<mapper resource="com/holley/charging/dcs/dao/xml/AccountMapper.xml"/>
+	</mappers>
+</configuration>		

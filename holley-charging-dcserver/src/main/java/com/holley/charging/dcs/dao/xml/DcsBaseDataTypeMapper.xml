@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.holley.charging.dcs.dao.mapper.DcsBaseDataTypeMapper" >
+  <resultMap id="BaseResultMap" type="com.holley.charging.dcs.dao.model.DcsBaseDataType" >
+    <id column="DATATYPE1" property="dataType" jdbcType="INTEGER" />
+    <result column="TYPECLASS" property="typeClass" jdbcType="INTEGER" />  
+    <result column="NAME" property="name" jdbcType="VARCHAR" />
+    <result column="UNIT" property="unit" jdbcType="VARCHAR" /> 
+    <result column="CODE1" property="code1" jdbcType="CHAR" />
+    <result column="CODE2" property="code2" jdbcType="CHAR" />
+  </resultMap>
+  
+  <sql id="Base_Column_List" >
+    DATATYPE1, TYPECLASS, NAME, UNIT, CODE1, CODE2
+  </sql>
+  <select id="selectByTypeClass" resultType="java.lang.Integer"  parameterType="java.lang.Integer" >
+    select DATATYPE1
+    from dcs_basedatatype
+    where TYPECLASS = #{typeClass,jdbcType=INTEGER}
+  </select>
+
+</mapper>

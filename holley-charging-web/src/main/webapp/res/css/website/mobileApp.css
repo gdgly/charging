@@ -1,0 +1,33 @@
+hr {
+    margin-top: 0px;
+    margin-bottom: 0px;
+    border: 0;
+    border-top: 3px solid #0a94f2;
+    width: 145px;float: left;
+}
+
+.btn-green,.btn-green:active,.btn-green:hover,.btn-green:focus{
+    color: #fff;
+    background-color: #97c024;
+    outline: none;
+}
+
+.btn-gray,.btn-gray:active,.btn-gray:hover,.btn-gray:focus {
+    color: #fff;
+	background-color: #6d6e72;
+    outline: none;
+}
+
+.btn-group-lg>.btn,.btn-lg {
+    padding: 10px 16px;
+    font-size: 18px;
+    line-height: 1.3333333;
+    border-radius: 30px;
+    border-style: none;
+}
+
+.btn img{
+	width: 25px;
+	height: 30px;
+	margin-right: 10px;
+}

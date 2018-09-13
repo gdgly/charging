@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC  
+    "-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"  
+    "http://struts.apache.org/dtds/struts-2.3.dtd">  
+<struts>
+	<!-- 首页 -->
+	<package name="homepage" namespace="/home" extends="struts-base">
+		<action name="homepage" class="homePageAction" method="init">
+			<result name="success">/jsp/website/home/homePage.jsp</result> 
+		</action>
+		<action name="homesearch" class="homePageAction" method="search">
+			<result name="success">/jsp/home/homePageSearch.jsp</result>
+		</action>		
+		<action name="about" class="homePageAction" method="about">
+			<result name="success">/jsp/aboutus/aboutus.jsp</result>
+		</action>
+	</package>
+	<package name="homepage_json" namespace="/home" extends="json-default">
+		<action name="homepage_*" class="homePageAction" method="{1}">
+			<result type="json"></result>
+		</action>
+	</package>
+	
+	<!-- 移动应用 -->
+	<package name="app" namespace="/app" extends="struts-base">
+		<action name="mobileapp" class="mobileAppAction" method="init">
+			<result name="success">/jsp/website/app/mobileApp.jsp</result>
+		</action>
+	</package>
+	
+	<!-- 充电网络 -->
+	<package name="chargenet" namespace="/chargenet" extends="struts-base">
+		<action name="chargenet" class="chargeNetAction" method="init">
+			<result name="success">/jsp/website/chargenet/chargeNet.jsp</result>
+		</action>
+	</package>
+	<package name="chargenet_json" namespace="/chargenet" extends="json-default">
+		<action name="chargenet_*" class="chargeNetAction" method="{1}">
+			<result type="json"></result>
+		</action>
+	</package>
+	
+	<!-- 充电设备 -->
+	<package name="device" namespace="/device" extends="struts-base">
+		<action name="chargedevice" class="chargeDeviceAction" method="init">
+			<result name="success">/jsp/website/device/chargeDevice.jsp</result>
+		</action>
+	</package>
+	<package name="device_json" namespace="/device" extends="json-default">
+		<action name="chargedevice_*" class="chargeDeviceAction" method="{1}">
+			<result type="json"></result>
+		</action>
+	</package>
+	
+	<!-- 动态 -->
+	<package name="news" namespace="/news" extends="struts-base">
+		<action name="news" class="newsAction" method="init">
+			<result name="success">/jsp/website/news/news.jsp</result>
+		</action>
+		<action name="newsdetail" class="newsAction" method="queryDetail">
+			<result name="success">/jsp/website/news/newsDetail.jsp</result>
+		</action>
+	</package>
+	<package name="news_json" namespace="/news" extends="json-default">
+		<action name="news_*" class="newsAction" method="{1}">
+			<result type="json" />
+		</action>
+	</package>
+	
+	<!-- 关于我们 -->
+	<package name="aboutus" namespace="/aboutus" extends="struts-base">
+		<!-- 关于我们 -->
+		<action name="aboutus" class="aboutUsAction" method="aboutUsInit">
+			<result name="success">/jsp/website/aboutus/aboutUs.jsp</result>
+		</action>
+		<!-- 联系我们 -->
+		<action name="contactus" class="aboutUsAction" method="contactUsInit">
+			<result name="success">/jsp/website/aboutus/contactUs.jsp</result>
+		</action>
+	</package>
+	
+	<!--登陆与注册 -->
+	<package name="user" namespace="/user" extends="struts-base">
+		<!-- 跳转页面 -->
+		<action name="userlogin_init" class="userLoginAction" method="init">
+			<result name="success">/jsp/website/user/userLogin.jsp</result>
+			<result name="bussiness" type="redirectAction">
+				<param name="namespace">/bussiness</param>
+				<param name="actionName">safeInfo</param>
+			</result>
+			<result name="user" type="redirectAction">
+				<param name="namespace">/userAdmin</param>
+				<param name="actionName">home</param>
+			</result>
+		</action>
+		<action name="userregister_init" class="userRegisterAction" method="init">
+			<result name="success">/jsp/website/user/userRegister.jsp</result>
+		</action>		
+		<action name="userlogin_logout" class="userLoginAction" method="loginOut">
+			<result name="success" type="chain">
+				<param name="actionName">homepage</param>
+				<param name="namespace">/home</param>
+			</result>
+		</action>
+		<action name="pwdreset_init" class="pwdResetAction" method="init">
+			<result name="success">/jsp/website/user/pwdReset.jsp</result>
+		</action>
+		<!-- 请求验证码 -->
+		<action name="changecode" class="imageCodeAction" method="createCode">
+			<result name="success" type="stream">
+				<param name="inputName">imageStream</param>
+				<param name="bufferSize">4096</param>
+			</result>
+		</action>
+	</package>
+	<package name="user_json" namespace="/user" extends="json-default">
+		<action name="userregister_*" class="userRegisterAction" method="{1}">
+			<result type="json" />
+		</action>
+		<action name="userlogin_*" class="userLoginAction" method="{1}">
+			<result type="json" />
+		</action>
+		<action name="pwdreset_*" class="pwdResetAction" method="{1}">
+			<result type="json" />
+		</action>
+	</package>
+</struts>

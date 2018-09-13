@@ -1,0 +1,22 @@
+@charset "utf-8";
+
+.list-style{text-align:center;margin-top: 150px;}
+.list-style li{line-height:50px;}
+h3 ,span{color: gray;}
+h4{text-align: center; padding-left: 200px;margin-bottom: 30px;}
+
+<!-- addPile.jsp-->
+.select{text-align:left;margin-left:0px;margin-top: 5px;}
+.select li{list-style-type:none; float: left;width: 50%}
+.control-ul ul { padding-left:8px;	}
+
+<!-- existDevice.jsp-->
+.table-striped a{text-decoration: none;}
+.table-striped ul{list-style-type: none;}
+.title{padding-bottom: 15px;margin-top: 15px;margin-left: 6px;}
+.title span{font-size: 25px; color: #000;padding-bottom: 15px;}
+.title a{text-decoration:none; font-size:20px; float: right; margin-right: 30px;margin-top: 5px;}
+
+#menu ul li ul li{float: none;width: 154px;margin: 0px}
+ #menu ul li ul{ display:none;  width:154px;}
+#menu ul li.listshow  ul{display:block;}

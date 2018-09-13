@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:aop="http://www.springframework.org/schema/aop"
+	   xmlns:tx="http://www.springframework.org/schema/tx"
+	   xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	   xmlns:context="http://www.springframework.org/schema/context"
+	   xmlns:flex="http://www.springframework.org/schema/flex"
+	   xsi:schemaLocation="
+      http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd       
+      http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd       
+      http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-3.0.xsd       
+      http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd       
+      http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+      http://www.springframework.org/schema/flex http://www.springframework.org/schema/flex/spring-flex-1.5.xsd"
+	   default-autowire="byName">
+	<bean id="dataBaseService" class="com.holley.charging.dcs.database.MyBatisService"  init-method="initDataBase">
+	</bean>
+	<bean id="pileManagerService" class="com.holley.charging.dcs.service.PileManagerService"  >
+	</bean>
+	<bean id="channelManagerService" class="com.holley.charging.dcs.service.ChannelManagerService"  >
+	</bean>
+	<bean id="protocolService" class="com.holley.charging.dcs.service.ProtocolService" >
+		<property name="protocolList">
+			<value>
+				2:com.holley.charging.dcs.protocol.ProtocolChuangRui
+			</value>
+		</property>
+	</bean>
+	
+	<bean id="messageReciveService" class="com.holley.charging.dcs.service.MessageReciveService"> </bean>
+	<!--
+	<bean id="taskService" class="com.holley.emcp.dcs.service.TaskService"  >
+	</bean>
+	<bean id="dictionaryService" class="com.holley.emcp.dcs.service.DictionaryService"  >
+	</bean>
+	
+	<bean id="commForThird" class="com.holley.emcp.dcs.service.rmi.CommForThirdRMIImpl" scope="prototype">
+		<property name="deviceService" ref="deviceService" /> 
+	</bean>
+	<bean id="uiService" class="com.holley.emcp.dcs.service.rmi.UIServiceRMIImpl" scope="prototype">
+		<property name="deviceService" ref="deviceService" />
+		<property name="channelService" ref="channelService" /> 
+	</bean>
+	<bean id="serviceExporter" class="org.springframework.remoting.rmi.RmiServiceExporter">
+		<property name="service" ref="commForThird" />
+		<property name="serviceName" value="commForThird" />
+		<property name="serviceInterface" value="com.holley.emcp.dcs.service.ICommForThird" />
+		<property name="registryPort" value="9001" />
+		<property name="servicePort" value="9000" />
+	</bean>
+	<bean id="serviceExporter1" class="com.holley.emcp.dcs.service.rmi.ServerRmiServiceExporter">
+		<property name="service" ref="uiService" />
+		<property name="serviceName" value="uiService" />
+		<property name="serviceInterface" value="com.holley.emcp.dcs.service.IUIService" />
+		<property name="registryPort" value="9000" />
+	</bean>
+	-->
+</beans>

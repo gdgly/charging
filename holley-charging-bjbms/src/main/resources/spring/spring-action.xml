@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:flex="http://www.springframework.org/schema/flex"
+	xsi:schemaLocation="       
+      http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd       
+      http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd       
+      http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-4.0.xsd       
+      http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd       
+      http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+      http://www.springframework.org/schema/flex
+      http://www.springframework.org/schema/flex/spring-flex-1.0.xsd"
+	default-autowire="byName">
+	<!-- 公共 -->
+	<bean id="imageCodeAction" class="com.holley.charging.bjbms.frame.action.ImageCodeAction" scope="prototype"/>
+	<bean id="registerAction" class="com.holley.charging.bjbms.frame.action.RegisterAction" scope="prototype"/>
+	<bean id="loginAction" class="com.holley.charging.bjbms.frame.action.LoginAction" scope="prototype"/>
+	<bean id="pwdResetAction" class="com.holley.charging.bjbms.frame.action.PwdResetAction" scope="prototype"/>
+	
+	<!-- 运营商管理 -->
+	<bean id="busRealVerifyAction" class="com.holley.charging.bjbms.business.action.BusRealVerifyAction" scope="prototype"/>
+	<bean id="busRealTransferAction" class="com.holley.charging.bjbms.business.action.BusRealTransferAction" scope="prototype"/>
+	<bean id="busInfoAction" class="com.holley.charging.bjbms.business.action.BusInfoAction" scope="prototype"/>
+	
+	<!-- 个人管理 -->
+	<bean id="userRealVerifyAction" class="com.holley.charging.bjbms.person.action.UserRealVerifyAction" scope="prototype"/>
+	<bean id="userInfoAction" class="com.holley.charging.bjbms.person.action.UserInfoAction" scope="prototype"/>
+	<bean id="userReceiptAction" class="com.holley.charging.bjbms.person.action.UserReceiptAction" scope="prototype"/>
+    <bean id="userPileApplyAction"  class="com.holley.charging.bjbms.person.action.UserPileApplyAction" scope="prototype"/>
+	<!-- 充电卡管理 -->
+	 <bean id="cardManagerAction"  class="com.holley.charging.bjbms.person.action.CardManagerAction" scope="prototype"/>
+	<!-- 设备管理 -->
+	<bean id="deviceVerifyAction" class="com.holley.charging.bjbms.device.action.DeviceVerifyAction" scope="prototype"/>
+	 <bean id="stationAction" class="com.holley.charging.bjbms.device.action.StationAction" scope="prototype"/>
+	<bean id="pileAction" class="com.holley.charging.bjbms.device.action.PileAction" scope="prototype"/>
+	<bean id="pileModelAction" class="com.holley.charging.bjbms.device.action.PileModelAction" scope="prototype"/>
+	<bean id="repairPointAction" class="com.holley.charging.bjbms.device.action.RepairPointAction" scope="prototype"/>
+	
+	<!-- 交易管理 -->
+	<bean id="accountAction" class="com.holley.charging.bjbms.deal.action.AccountAction" scope="prototype"/>
+	<bean id="appointmentAction" class="com.holley.charging.bjbms.deal.action.AppointmentAction" scope="prototype"/>
+	<bean id="chargeAction" class="com.holley.charging.bjbms.deal.action.ChargeAction" scope="prototype"/>
+	<bean id="rechargeAction" class="com.holley.charging.bjbms.deal.action.RechargeAction" scope="prototype"/>
+	<bean id="accountLogAction" class="com.holley.charging.bjbms.deal.action.AccountLogAction" scope="prototype"/>
+	<bean id="billsAction" class="com.holley.charging.bjbms.deal.action.BillsAction" scope="prototype"/>
+	<bean id="cashVerifyAction" class="com.holley.charging.bjbms.deal.action.CashVerifyAction" scope="prototype"/>
+	<bean id="cashTransferAction" class="com.holley.charging.bjbms.deal.action.CashTransferAction" scope="prototype"/>
+	
+	<!-- 系统管理 -->
+	<bean id="roleAction" class="com.holley.charging.bjbms.sys.action.RoleAction" scope="prototype"/>
+	<bean id="userAction" class="com.holley.charging.bjbms.sys.action.UserAction" scope="prototype"/>
+	<bean id="dictionaryAction" class="com.holley.charging.bjbms.sys.action.DictionaryAction" scope="prototype"/>
+	<bean id="ruleAction" class="com.holley.charging.bjbms.sys.action.RuleAction" scope="prototype"/>
+	<bean id="operationLogAction" class="com.holley.charging.bjbms.sys.action.OperationLogAction" scope="prototype"/>
+	<bean id="suggestionAction" class="com.holley.charging.bjbms.sys.action.SuggestionAction" scope="prototype"/>
+	
+	<!-- 运行管理 -->
+	<bean id="monitoringAction" class="com.holley.charging.bjbms.run.action.MonitoringAction" scope="prototype"/>
+	<!-- 支付 -->
+	<!-- <bean id="payAction" class="com.holley.charging.bjbms.pay.action.PayAction" scope="prototype"/> -->
+</beans>

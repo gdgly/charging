@@ -1,0 +1,377 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.holley.charging.dao.bus.BusRechargeMapper" >
+  <resultMap id="BaseResultMap" type="com.holley.charging.model.bus.BusRecharge" >
+    <id column="ID" property="id" jdbcType="INTEGER" />
+    <result column="TRADE_NO" property="tradeNo" jdbcType="VARCHAR" />
+    <result column="USER_ID" property="userId" jdbcType="INTEGER" />
+    <result column="STATUS" property="status" jdbcType="SMALLINT" />
+    <result column="MONEY" property="money" jdbcType="DECIMAL" />
+    <result column="PAY_WAY" property="payWay" jdbcType="SMALLINT" />
+    <result column="ACCOUNT_INFO" property="accountInfo" jdbcType="VARCHAR" />
+    <result column="FEE" property="fee" jdbcType="DECIMAL" />
+    <result column="ADD_TIME" property="addTime" jdbcType="TIMESTAMP" />
+    <result column="ADD_IP" property="addIp" jdbcType="VARCHAR" />
+  </resultMap>
+  <resultMap id="RechargeModelMap" type="com.holley.charging.model.def.RechargeModel" extends="BaseResultMap">
+    <result column="username" property="username" jdbcType="VARCHAR" />
+    <result column="phone" property="phone" jdbcType="VARCHAR" />
+  </resultMap>
+  <sql id="Example_Where_Clause" >
+    <where >
+      <foreach collection="oredCriteria" item="criteria" separator="or" >
+        <if test="criteria.valid" >
+          <trim prefix="(" suffix=")" prefixOverrides="and" >
+            <foreach collection="criteria.criteria" item="criterion" >
+              <choose >
+                <when test="criterion.noValue" >
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue" >
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue" >
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue" >
+                  and ${criterion.condition}
+                  <foreach collection="criterion.value" item="listItem" open="(" close=")" separator="," >
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause" >
+    <where >
+      <foreach collection="example.oredCriteria" item="criteria" separator="or" >
+        <if test="criteria.valid" >
+          <trim prefix="(" suffix=")" prefixOverrides="and" >
+            <foreach collection="criteria.criteria" item="criterion" >
+              <choose >
+                <when test="criterion.noValue" >
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue" >
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue" >
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue" >
+                  and ${criterion.condition}
+                  <foreach collection="criterion.value" item="listItem" open="(" close=")" separator="," >
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Base_Column_List" >
+    ID, TRADE_NO, USER_ID, STATUS, MONEY, PAY_WAY, ACCOUNT_INFO, FEE, ADD_TIME, ADD_IP
+  </sql>
+  <select id="selectByExample" resultMap="BaseResultMap" parameterType="com.holley.charging.model.bus.BusRechargeExample" >
+    select
+    <if test="distinct" >
+      distinct
+    </if>
+    <include refid="Base_Column_List" />
+    from bus_recharge
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null" >
+      order by ${orderByClause}
+    </if>
+  </select>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from bus_recharge
+    where ID = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from bus_recharge
+    where ID = #{id,jdbcType=INTEGER}
+  </delete>
+  <delete id="deleteByExample" parameterType="com.holley.charging.model.bus.BusRechargeExample" >
+    delete from bus_recharge
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+  </delete>
+  <insert id="insert" parameterType="com.holley.charging.model.bus.BusRecharge" useGeneratedKeys="true" keyProperty="id">
+    insert into bus_recharge (ID, TRADE_NO, USER_ID, 
+      STATUS, MONEY, PAY_WAY, 
+      ACCOUNT_INFO, FEE, ADD_TIME, 
+      ADD_IP)
+    values (#{id,jdbcType=INTEGER}, #{tradeNo,jdbcType=VARCHAR}, #{userId,jdbcType=INTEGER}, 
+      #{status,jdbcType=SMALLINT}, #{money,jdbcType=DECIMAL}, #{payWay,jdbcType=SMALLINT}, 
+      #{accountInfo,jdbcType=VARCHAR}, #{fee,jdbcType=DECIMAL}, #{addTime,jdbcType=TIMESTAMP}, 
+      #{addIp,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.holley.charging.model.bus.BusRecharge" useGeneratedKeys="true" keyProperty="id">
+    insert into bus_recharge
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        ID,
+      </if>
+      <if test="tradeNo != null" >
+        TRADE_NO,
+      </if>
+      <if test="userId != null" >
+        USER_ID,
+      </if>
+      <if test="status != null" >
+        STATUS,
+      </if>
+      <if test="money != null" >
+        MONEY,
+      </if>
+      <if test="payWay != null" >
+        PAY_WAY,
+      </if>
+      <if test="accountInfo != null" >
+        ACCOUNT_INFO,
+      </if>
+      <if test="fee != null" >
+        FEE,
+      </if>
+      <if test="addTime != null" >
+        ADD_TIME,
+      </if>
+      <if test="addIp != null" >
+        ADD_IP,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="tradeNo != null" >
+        #{tradeNo,jdbcType=VARCHAR},
+      </if>
+      <if test="userId != null" >
+        #{userId,jdbcType=INTEGER},
+      </if>
+      <if test="status != null" >
+        #{status,jdbcType=SMALLINT},
+      </if>
+      <if test="money != null" >
+        #{money,jdbcType=DECIMAL},
+      </if>
+      <if test="payWay != null" >
+        #{payWay,jdbcType=SMALLINT},
+      </if>
+      <if test="accountInfo != null" >
+        #{accountInfo,jdbcType=VARCHAR},
+      </if>
+      <if test="fee != null" >
+        #{fee,jdbcType=DECIMAL},
+      </if>
+      <if test="addTime != null" >
+        #{addTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="addIp != null" >
+        #{addIp,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <select id="countByExample" parameterType="com.holley.charging.model.bus.BusRechargeExample" resultType="java.lang.Integer" >
+    select count(*) from bus_recharge
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+  </select>
+  <update id="updateByExampleSelective" parameterType="map" >
+    update bus_recharge
+    <set >
+      <if test="record.id != null" >
+        ID = #{record.id,jdbcType=INTEGER},
+      </if>
+      <if test="record.tradeNo != null" >
+        TRADE_NO = #{record.tradeNo,jdbcType=VARCHAR},
+      </if>
+      <if test="record.userId != null" >
+        USER_ID = #{record.userId,jdbcType=INTEGER},
+      </if>
+      <if test="record.status != null" >
+        STATUS = #{record.status,jdbcType=SMALLINT},
+      </if>
+      <if test="record.money != null" >
+        MONEY = #{record.money,jdbcType=DECIMAL},
+      </if>
+      <if test="record.payWay != null" >
+        PAY_WAY = #{record.payWay,jdbcType=SMALLINT},
+      </if>
+      <if test="record.accountInfo != null" >
+        ACCOUNT_INFO = #{record.accountInfo,jdbcType=VARCHAR},
+      </if>
+      <if test="record.fee != null" >
+        FEE = #{record.fee,jdbcType=DECIMAL},
+      </if>
+      <if test="record.addTime != null" >
+        ADD_TIME = #{record.addTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="record.addIp != null" >
+        ADD_IP = #{record.addIp,jdbcType=VARCHAR},
+      </if>
+    </set>
+    <if test="_parameter != null" >
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByExample" parameterType="map" >
+    update bus_recharge
+    set ID = #{record.id,jdbcType=INTEGER},
+      TRADE_NO = #{record.tradeNo,jdbcType=VARCHAR},
+      USER_ID = #{record.userId,jdbcType=INTEGER},
+      STATUS = #{record.status,jdbcType=SMALLINT},
+      MONEY = #{record.money,jdbcType=DECIMAL},
+      PAY_WAY = #{record.payWay,jdbcType=SMALLINT},
+      ACCOUNT_INFO = #{record.accountInfo,jdbcType=VARCHAR},
+      FEE = #{record.fee,jdbcType=DECIMAL},
+      ADD_TIME = #{record.addTime,jdbcType=TIMESTAMP},
+      ADD_IP = #{record.addIp,jdbcType=VARCHAR}
+    <if test="_parameter != null" >
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.holley.charging.model.bus.BusRecharge" >
+    update bus_recharge
+    <set >
+      <if test="tradeNo != null" >
+        TRADE_NO = #{tradeNo,jdbcType=VARCHAR},
+      </if>
+      <if test="userId != null" >
+        USER_ID = #{userId,jdbcType=INTEGER},
+      </if>
+      <if test="status != null" >
+        STATUS = #{status,jdbcType=SMALLINT},
+      </if>
+      <if test="money != null" >
+        MONEY = #{money,jdbcType=DECIMAL},
+      </if>
+      <if test="payWay != null" >
+        PAY_WAY = #{payWay,jdbcType=SMALLINT},
+      </if>
+      <if test="accountInfo != null" >
+        ACCOUNT_INFO = #{accountInfo,jdbcType=VARCHAR},
+      </if>
+      <if test="fee != null" >
+        FEE = #{fee,jdbcType=DECIMAL},
+      </if>
+      <if test="addTime != null" >
+        ADD_TIME = #{addTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="addIp != null" >
+        ADD_IP = #{addIp,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.holley.charging.model.bus.BusRecharge" >
+    update bus_recharge
+    set TRADE_NO = #{tradeNo,jdbcType=VARCHAR},
+      USER_ID = #{userId,jdbcType=INTEGER},
+      STATUS = #{status,jdbcType=SMALLINT},
+      MONEY = #{money,jdbcType=DECIMAL},
+      PAY_WAY = #{payWay,jdbcType=SMALLINT},
+      ACCOUNT_INFO = #{accountInfo,jdbcType=VARCHAR},
+      FEE = #{fee,jdbcType=DECIMAL},
+      ADD_TIME = #{addTime,jdbcType=TIMESTAMP},
+      ADD_IP = #{addIp,jdbcType=VARCHAR}
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+  <select id="getTotalRechargeFeeByMap" parameterType="java.util.Map" resultType="java.math.BigDecimal">
+  select sum(MONEY) from 
+  bus_recharge 
+  where 
+  USER_ID=#{userId,jdbcType=INTEGER}
+  and STATUS=#{rechargeStatus,jdbcType=SMALLINT}
+  and year(ADD_TIME) = #{year}
+  and month(ADD_TIME) = #{month}
+  </select>
+  <select id="selectByPage"  resultMap="BaseResultMap" parameterType="java.util.Map">
+   	select 
+    <include refid="Base_Column_List" />
+    from bus_recharge
+    where USER_ID = #{userId,jdbcType=INTEGER}
+    <if test="startTime != null">
+    	and ADD_TIME &gt;= #{startTime,jdbcType=TIMESTAMP}
+    </if>
+   	<if test="endTime != null">
+   	 	and ADD_TIME &lt;= #{endTime,jdbcType=TIMESTAMP}
+    </if>
+    order by ADD_TIME desc
+    <if test="maxLimit != null">
+    	limit #{maxLimit}
+    </if>
+  </select>
+  <select id="selectRechargeByPage" parameterType="java.util.Map" resultMap="RechargeModelMap">
+  	SELECT r.ID,r.USER_ID,r.TRADE_NO,r.STATUS,r.MONEY,r.FEE,r.PAY_WAY,r.ACCOUNT_INFO,r.ADD_IP,r.ADD_TIME,
+		   u.USERNAME,u.PHONE
+	  FROM bus_recharge r,bus_user u
+	 WHERE r.USER_ID = u.ID
+	 <if test="groupId != null">
+	 	AND u.GROUP_ID = #{groupId}
+	 </if>
+	<if test="searchuser != null">
+		AND (u.USERNAME LIKE concat('%',#{searchuser},'%' ) OR u.PHONE LIKE concat('%',#{searchuser},'%' ))
+	</if>
+	<if test="searchtradeno != null">
+		AND r.TRADE_NO LIKE concat('%',#{searchtradeno},'%') 
+	</if>
+	<if test="status != null">
+		AND r.STATUS = #{status}
+	</if>
+	<if test="payway != null">
+		AND r.PAY_WAY = #{payway}
+	</if>
+	<if test="startdate != null">
+    	and r.ADD_TIME &gt;= #{startdate}
+    </if>
+   	<if test="enddate != null">
+   	 	and r.ADD_TIME &lt;= #{enddate}
+    </if>
+    ORDER BY r.ADD_TIME DESC
+  </select>
+  <select id="selectRechargeDetail" parameterType="java.lang.Integer" resultMap="RechargeModelMap">
+  	SELECT r.ID,r.USER_ID,r.TRADE_NO,r.STATUS,r.MONEY,r.FEE,r.PAY_WAY,r.ACCOUNT_INFO,r.ADD_IP,r.ADD_TIME,
+		   u.USERNAME,u.PHONE
+	  FROM bus_recharge r,bus_user u
+	 WHERE r.USER_ID = u.ID
+	   AND r.ID = #{id}
+  </select>
+  <select id="selectUserRechargeByPage" parameterType="java.util.Map" resultMap="BaseResultMap">
+  	<include refid="selectUserRecharge"/>
+  </select>
+  <select id="selectUserRechargeTotalFee" parameterType="java.util.Map" resultType="java.math.BigDecimal">
+  	select sum(MONEY)
+  	from(
+	  	<include refid="selectUserRecharge"/>
+  	)t
+  </select>
+  <sql id="selectUserRecharge">
+  	SELECT 
+    <include refid="Base_Column_List" />
+    FROM bus_recharge
+    WHERE USER_ID = #{userid}
+    AND STATUS = 2
+    <if test="startdate != null">
+    	AND ADD_TIME &gt;= #{startdate}
+    </if>
+   	<if test="enddate != null">
+   	 	AND ADD_TIME &lt; #{enddate}
+    </if>
+    ORDER BY ADD_TIME desc
+  </sql>
+</mapper>

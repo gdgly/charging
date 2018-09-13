@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC  
+    "-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"  
+    "http://struts.apache.org/dtds/struts-2.3.dtd">  
+<struts>
+	
+	<package name="sys" namespace="/sys" extends="struts-default">
+		<!-- 请求验证码 -->
+		<action name="validatecode" class="imageCodeAction" method="createCode">
+			<result name="success" type="stream">
+				<param name="inputName">imageStream</param>
+				<param name="bufferSize">4096</param>
+			</result>
+			<result name="error"  type="stream">
+			</result>
+		</action>
+	</package>
+	<package name="pob" namespace="/pob" extends="struts-default">
+		<!-- 充电点分享 -->
+		<action name="stationshare" class="pobObjectAction" method="stationshare">
+			<result name="success">/jsp/stationshare.jsp</result> 
+		</action>
+		<!-- 关于我们 -->
+		<action name="usinfo" class="pobObjectAction" method="usinfo">
+			<result name="success">/jsp/aboutus.jsp</result> 
+		</action>
+	</package>
+	
+	<!-- 用户相关 -->
+	<package name="user_json_nologin" namespace="/user" extends="json-login">
+		<action name="messagecode" class="userRegisterAction" method="messagecode">
+			<result type="json" />
+		</action>
+		<action name="register" class="userRegisterAction" method="register">
+			<result type="json" />
+		</action>
+		<action name="login" class="userLoginAction" method="login">
+			<result type="json"> <param name="excludeNullProperties">true</param>
+			</result>
+		</action>	
+	</package>	
+	<!-- 档案相关 -->
+	<package name="pob_json" namespace="/pob" extends="json-login">
+		<action name="chargestation" class="pobObjectAction" method="chargestation">
+			<result type="json" >
+              <param name="excludeNullProperties">true</param>
+			</result>
+		</action>
+		<action name="piles" class="pobObjectAction" method="piles">
+			<result type="json" >
+              <param name="excludeNullProperties">true</param>
+			</result>
+		</action>
+		<action name="repairpoint" class="pobObjectAction" method="repairpoint">
+			<result type="json" >
+              <param name="excludeNullProperties">true</param>
+			</result>
+		</action>
+		<action name="*" class="pobObjectAction" method="{1}">
+			<result type="json" >
+              <param name="excludeNullProperties">true</param>
+			</result>
+		</action>
+	</package>
+	<!-- 系统-->
+	<package name="sys_json" namespace="/sys" extends="json-login">
+		<action name="version" class="versionAction" method="version">
+			<result type="json" >
+              <param name="excludeNullProperties">true</param>
+			</result>
+		</action>
+		<action name="carbrand" class="sysLinkAction" method="carbrand">
+			<result type="json" >
+              <param name="excludeNullProperties">true</param>
+			</result>
+		</action>
+		<action name="carmodel" class="sysLinkAction" method="carmodel">
+			<result type="json" />
+		</action>
+		<action name="*" class="versionAction" method="{1}">
+			<result type="json" >
+              <param name="excludeNullProperties">true</param>
+			</result>
+		</action>
+	</package>
+	
+	<package name="user_json" namespace="/user" extends="json-login">		
+		<action name="modifypassword" class="userLoginAction" method="modifypassword">
+			<result type="json" />
+		</action>
+		<action name="*" class="userInfoAction" method="{1}">
+			<result type="json" >
+				<!-- 是否去掉返回值为NULL的properties -->
+              <param name="excludeNullProperties">true</param>
+			</result>
+		</action>
+	</package>	
+	<!-- 业务操作 -->
+	<package name="bus_json" namespace="/bus" extends="json-login">
+		<action name="chargestationstatus" class="pobObjectAction" method="chargestationstatus">
+			<result type="json" >
+              <param name="excludeNullProperties">true</param>
+			</result>
+		</action>
+		<action name="pilestatus" class="pobObjectAction" method="pilestatus">
+			<result type="json" >
+              <param name="excludeNullProperties">true</param>
+			</result>
+		</action>
+		<action name="pilecomment" class="pobObjectAction" method="pilecomment">
+			<result type="json" >
+              <param name="excludeNullProperties">true</param>
+			</result>
+		</action>
+		<action name="commentadd" class="pobObjectAction" method="commentadd">
+			<result type="json" >
+              <param name="excludeNullProperties">true</param>
+			</result>
+		</action>
+		<action name="reqappointment" class="appointmentAction" method="reqappointment">
+			<result type="json" >
+              <param name="excludeNullProperties">true</param>
+			</result>
+		</action>
+		<action name="startappointment" class="appointmentAction" method="startappointment">
+			<result type="json" >
+              <param name="excludeNullProperties">true</param>
+			</result>
+		</action>
+		<action name="endappointment" class="appointmentAction" method="endappointment">
+			<result type="json" >
+              <param name="excludeNullProperties">true</param>
+			</result>
+		</action>
+		<action name="againappointment" class="appointmentAction" method="againappointment">
+			<result type="json" >
+              <param name="excludeNullProperties">true</param>
+			</result>
+		</action>
+		<action name="*" class="chargingAction" method="{1}">
+			<result type="json" >
+              <param name="excludeNullProperties">true</param>
+			</result>
+		</action>
+	</package>
+	<!-- 支付操作 -->
+	<package name="pay_json" namespace="/pay" extends="json-login">
+		<action name="*" class="paymentAction" method="{1}">
+			<result type="json" >
+              <param name="excludeNullProperties">true</param>
+			</result>
+		</action>
+	</package>
+	
+		
+</struts>

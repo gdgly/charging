@@ -1,0 +1,706 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.holley.charging.dao.bus.BusAppointmentMapper" >
+  <resultMap id="BaseResultMap" type="com.holley.charging.model.bus.BusAppointment" >
+    <id column="ID" property="id" jdbcType="INTEGER" />
+    <result column="USER_ID" property="userId" jdbcType="INTEGER" />
+    <result column="PILE_ID" property="pileId" jdbcType="INTEGER" />
+    <result column="APP_NO" property="appNo" jdbcType="VARCHAR" />
+    <result column="START_TIME" property="startTime" jdbcType="TIMESTAMP" />
+    <result column="END_TIME" property="endTime" jdbcType="TIMESTAMP" />
+    <result column="APP_LEN" property="appLen" jdbcType="INTEGER" />
+    <result column="APP_FEE" property="appFee" jdbcType="DECIMAL" />
+    <result column="APP_STATUS" property="appStatus" jdbcType="SMALLINT" />
+    <result column="PAY_WAY" property="payWay" jdbcType="SMALLINT" />
+    <result column="ACCOUNT_INFO" property="accountInfo" jdbcType="VARCHAR" />
+    <result column="PAY_STATUS" property="payStatus" jdbcType="SMALLINT" />
+    <result column="IS_BILL" property="isBill" jdbcType="SMALLINT" />
+    <result column="ADD_TIME" property="addTime" jdbcType="TIMESTAMP" />
+  </resultMap>
+    <resultMap id="StationAppointmentModelMap" type="com.holley.charging.model.def.StationAppointmentModel" >
+  	<result column="stationId" property="stationId" jdbcType="INTEGER" />
+  	<result column="stationName" property="stationName" jdbcType="VARCHAR" />
+  	<result column="address" property="address" jdbcType="VARCHAR" />
+  	<result column="pileNum" property="pileNum" jdbcType="INTEGER" />
+   	<result column="appNum" property="appNum" jdbcType="INTEGER" />
+    <result column="appFee" property="appFee" jdbcType="DECIMAL" />
+    <result column="score" property="score" jdbcType="SMALLINT" />
+  </resultMap>
+    <resultMap id="AppointmentModelMap" type="com.holley.charging.model.def.AppointmentModel" extends="BaseResultMap">
+    <result column="username" property="username" jdbcType="VARCHAR" />
+    <result column="phone" property="phone" jdbcType="VARCHAR" />
+    <result column="pileName" property="pileName" jdbcType="VARCHAR" />
+    <result column="pileType" property="pileType" jdbcType="SMALLINT" />
+    <result column="stationName" property="stationName" jdbcType="VARCHAR" />
+    <result column="address" property="address" jdbcType="VARCHAR" />
+  </resultMap>
+   <resultMap id="ProfitModelMap" type="com.holley.charging.model.def.ProfitModel" >
+  	<result column="dateName" property="dateName" jdbcType="VARCHAR" />
+	<result column="appMoney" property="appMoney" jdbcType="DECIMAL" />
+	<result column="serviceMoney" property="serviceMoney" jdbcType="DECIMAL" />
+	<result column="parkMoney" property="parkMoney" jdbcType="DECIMAL" />
+	<result column="chaMoney" property="chaMoney" jdbcType="DECIMAL" />
+  </resultMap>
+  <sql id="Example_Where_Clause" >
+    <where >
+      <foreach collection="oredCriteria" item="criteria" separator="or" >
+        <if test="criteria.valid" >
+          <trim prefix="(" suffix=")" prefixOverrides="and" >
+            <foreach collection="criteria.criteria" item="criterion" >
+              <choose >
+                <when test="criterion.noValue" >
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue" >
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue" >
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue" >
+                  and ${criterion.condition}
+                  <foreach collection="criterion.value" item="listItem" open="(" close=")" separator="," >
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause" >
+    <where >
+      <foreach collection="example.oredCriteria" item="criteria" separator="or" >
+        <if test="criteria.valid" >
+          <trim prefix="(" suffix=")" prefixOverrides="and" >
+            <foreach collection="criteria.criteria" item="criterion" >
+              <choose >
+                <when test="criterion.noValue" >
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue" >
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue" >
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue" >
+                  and ${criterion.condition}
+                  <foreach collection="criterion.value" item="listItem" open="(" close=")" separator="," >
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Base_Column_List" >
+    ID, USER_ID, PILE_ID, APP_NO, START_TIME, END_TIME, APP_LEN, APP_FEE, APP_STATUS, 
+    PAY_WAY, ACCOUNT_INFO, PAY_STATUS, IS_BILL, ADD_TIME
+  </sql>
+  <select id="selectByExample" resultMap="BaseResultMap" parameterType="com.holley.charging.model.bus.BusAppointmentExample" >
+    select
+    <if test="distinct" >
+      distinct
+    </if>
+    <include refid="Base_Column_List" />
+    from bus_appointment
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null" >
+      order by ${orderByClause}
+    </if>
+  </select>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from bus_appointment
+    where ID = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from bus_appointment
+    where ID = #{id,jdbcType=INTEGER}
+  </delete>
+  <delete id="deleteByExample" parameterType="com.holley.charging.model.bus.BusAppointmentExample" >
+    delete from bus_appointment
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+  </delete>
+  <insert id="insert" parameterType="com.holley.charging.model.bus.BusAppointment" useGeneratedKeys="true" keyProperty="id">
+    insert into bus_appointment (ID, USER_ID, PILE_ID, 
+      APP_NO, START_TIME, END_TIME, 
+      APP_LEN, APP_FEE, APP_STATUS, 
+      PAY_WAY, ACCOUNT_INFO, PAY_STATUS, 
+      IS_BILL, ADD_TIME)
+    values (#{id,jdbcType=INTEGER}, #{userId,jdbcType=INTEGER}, #{pileId,jdbcType=INTEGER}, 
+      #{appNo,jdbcType=VARCHAR}, #{startTime,jdbcType=TIMESTAMP}, #{endTime,jdbcType=TIMESTAMP}, 
+      #{appLen,jdbcType=INTEGER}, #{appFee,jdbcType=DECIMAL}, #{appStatus,jdbcType=SMALLINT}, 
+      #{payWay,jdbcType=SMALLINT}, #{accountInfo,jdbcType=VARCHAR}, #{payStatus,jdbcType=SMALLINT}, 
+      #{isBill,jdbcType=SMALLINT}, #{addTime,jdbcType=TIMESTAMP})
+  </insert>
+  <insert id="insertSelective" parameterType="com.holley.charging.model.bus.BusAppointment" useGeneratedKeys="true" keyProperty="id">
+    insert into bus_appointment
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        ID,
+      </if>
+      <if test="userId != null" >
+        USER_ID,
+      </if>
+      <if test="pileId != null" >
+        PILE_ID,
+      </if>
+      <if test="appNo != null" >
+        APP_NO,
+      </if>
+      <if test="startTime != null" >
+        START_TIME,
+      </if>
+      <if test="endTime != null" >
+        END_TIME,
+      </if>
+      <if test="appLen != null" >
+        APP_LEN,
+      </if>
+      <if test="appFee != null" >
+        APP_FEE,
+      </if>
+      <if test="appStatus != null" >
+        APP_STATUS,
+      </if>
+      <if test="payWay != null" >
+        PAY_WAY,
+      </if>
+      <if test="accountInfo != null" >
+        ACCOUNT_INFO,
+      </if>
+      <if test="payStatus != null" >
+        PAY_STATUS,
+      </if>
+      <if test="isBill != null" >
+        IS_BILL,
+      </if>
+      <if test="addTime != null" >
+        ADD_TIME,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="userId != null" >
+        #{userId,jdbcType=INTEGER},
+      </if>
+      <if test="pileId != null" >
+        #{pileId,jdbcType=INTEGER},
+      </if>
+      <if test="appNo != null" >
+        #{appNo,jdbcType=VARCHAR},
+      </if>
+      <if test="startTime != null" >
+        #{startTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="endTime != null" >
+        #{endTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="appLen != null" >
+        #{appLen,jdbcType=INTEGER},
+      </if>
+      <if test="appFee != null" >
+        #{appFee,jdbcType=DECIMAL},
+      </if>
+      <if test="appStatus != null" >
+        #{appStatus,jdbcType=SMALLINT},
+      </if>
+      <if test="payWay != null" >
+        #{payWay,jdbcType=SMALLINT},
+      </if>
+      <if test="accountInfo != null" >
+        #{accountInfo,jdbcType=VARCHAR},
+      </if>
+      <if test="payStatus != null" >
+        #{payStatus,jdbcType=SMALLINT},
+      </if>
+      <if test="isBill != null" >
+        #{isBill,jdbcType=SMALLINT},
+      </if>
+      <if test="addTime != null" >
+        #{addTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <select id="countByExample" parameterType="com.holley.charging.model.bus.BusAppointmentExample" resultType="java.lang.Integer" >
+    select count(*) from bus_appointment
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+  </select>
+  <update id="updateByExampleSelective" parameterType="map" >
+    update bus_appointment
+    <set >
+      <if test="record.id != null" >
+        ID = #{record.id,jdbcType=INTEGER},
+      </if>
+      <if test="record.userId != null" >
+        USER_ID = #{record.userId,jdbcType=INTEGER},
+      </if>
+      <if test="record.pileId != null" >
+        PILE_ID = #{record.pileId,jdbcType=INTEGER},
+      </if>
+      <if test="record.appNo != null" >
+        APP_NO = #{record.appNo,jdbcType=VARCHAR},
+      </if>
+      <if test="record.startTime != null" >
+        START_TIME = #{record.startTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="record.endTime != null" >
+        END_TIME = #{record.endTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="record.appLen != null" >
+        APP_LEN = #{record.appLen,jdbcType=INTEGER},
+      </if>
+      <if test="record.appFee != null" >
+        APP_FEE = #{record.appFee,jdbcType=DECIMAL},
+      </if>
+      <if test="record.appStatus != null" >
+        APP_STATUS = #{record.appStatus,jdbcType=SMALLINT},
+      </if>
+      <if test="record.payWay != null" >
+        PAY_WAY = #{record.payWay,jdbcType=SMALLINT},
+      </if>
+      <if test="record.accountInfo != null" >
+        ACCOUNT_INFO = #{record.accountInfo,jdbcType=VARCHAR},
+      </if>
+      <if test="record.payStatus != null" >
+        PAY_STATUS = #{record.payStatus,jdbcType=SMALLINT},
+      </if>
+      <if test="record.isBill != null" >
+        IS_BILL = #{record.isBill,jdbcType=SMALLINT},
+      </if>
+      <if test="record.addTime != null" >
+        ADD_TIME = #{record.addTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    <if test="_parameter != null" >
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByExample" parameterType="map" >
+    update bus_appointment
+    set ID = #{record.id,jdbcType=INTEGER},
+      USER_ID = #{record.userId,jdbcType=INTEGER},
+      PILE_ID = #{record.pileId,jdbcType=INTEGER},
+      APP_NO = #{record.appNo,jdbcType=VARCHAR},
+      START_TIME = #{record.startTime,jdbcType=TIMESTAMP},
+      END_TIME = #{record.endTime,jdbcType=TIMESTAMP},
+      APP_LEN = #{record.appLen,jdbcType=INTEGER},
+      APP_FEE = #{record.appFee,jdbcType=DECIMAL},
+      APP_STATUS = #{record.appStatus,jdbcType=SMALLINT},
+      PAY_WAY = #{record.payWay,jdbcType=SMALLINT},
+      ACCOUNT_INFO = #{record.accountInfo,jdbcType=VARCHAR},
+      PAY_STATUS = #{record.payStatus,jdbcType=SMALLINT},
+      IS_BILL = #{record.isBill,jdbcType=SMALLINT},
+      ADD_TIME = #{record.addTime,jdbcType=TIMESTAMP}
+    <if test="_parameter != null" >
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.holley.charging.model.bus.BusAppointment" >
+    update bus_appointment
+    <set >
+      <if test="userId != null" >
+        USER_ID = #{userId,jdbcType=INTEGER},
+      </if>
+      <if test="pileId != null" >
+        PILE_ID = #{pileId,jdbcType=INTEGER},
+      </if>
+      <if test="appNo != null" >
+        APP_NO = #{appNo,jdbcType=VARCHAR},
+      </if>
+      <if test="startTime != null" >
+        START_TIME = #{startTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="endTime != null" >
+        END_TIME = #{endTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="appLen != null" >
+        APP_LEN = #{appLen,jdbcType=INTEGER},
+      </if>
+      <if test="appFee != null" >
+        APP_FEE = #{appFee,jdbcType=DECIMAL},
+      </if>
+      <if test="appStatus != null" >
+        APP_STATUS = #{appStatus,jdbcType=SMALLINT},
+      </if>
+      <if test="payWay != null" >
+        PAY_WAY = #{payWay,jdbcType=SMALLINT},
+      </if>
+      <if test="accountInfo != null" >
+        ACCOUNT_INFO = #{accountInfo,jdbcType=VARCHAR},
+      </if>
+      <if test="payStatus != null" >
+        PAY_STATUS = #{payStatus,jdbcType=SMALLINT},
+      </if>
+      <if test="isBill != null" >
+        IS_BILL = #{isBill,jdbcType=SMALLINT},
+      </if>
+      <if test="addTime != null" >
+        ADD_TIME = #{addTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.holley.charging.model.bus.BusAppointment" >
+    update bus_appointment
+    set USER_ID = #{userId,jdbcType=INTEGER},
+      PILE_ID = #{pileId,jdbcType=INTEGER},
+      APP_NO = #{appNo,jdbcType=VARCHAR},
+      START_TIME = #{startTime,jdbcType=TIMESTAMP},
+      END_TIME = #{endTime,jdbcType=TIMESTAMP},
+      APP_LEN = #{appLen,jdbcType=INTEGER},
+      APP_FEE = #{appFee,jdbcType=DECIMAL},
+      APP_STATUS = #{appStatus,jdbcType=SMALLINT},
+      PAY_WAY = #{payWay,jdbcType=SMALLINT},
+      ACCOUNT_INFO = #{accountInfo,jdbcType=VARCHAR},
+      PAY_STATUS = #{payStatus,jdbcType=SMALLINT},
+      IS_BILL = #{isBill,jdbcType=SMALLINT},
+      ADD_TIME = #{addTime,jdbcType=TIMESTAMP}
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+    <!-- 分页查询充电点预约记录 -->
+  <select id="selectStationAppByPage" resultMap="StationAppointmentModelMap" parameterType="java.util.Map" >
+   select
+   station.ID as stationId,
+   station.SCORE as score,
+   station.STATION_NAME as stationName,
+   station.ADDRESS as address,
+   (station.SLOW_NUM+station.FAST_NUM) as pileNum,
+   (select count(1) from  bus_appointment app left join pob_charging_pile pile on pile.ID = app.PILE_ID where pile.STATION_ID=station.ID) as appNum,
+   ifnull((select sum(truncate(APP_FEE*#{rate},2)) from  pob_charging_pile pile left join bus_appointment app on pile.ID = app.PILE_ID where pile.STATION_ID=station.ID),0) as appFee
+   from pob_charging_station station
+   where 1=1
+   <if test="busType != null" >
+   		and station.BUS_TYPE=#{busType,jdbcType=SMALLINT} 
+   </if>
+   <if test="busMec != null" >
+     	and station.BUS_MEC=#{busMec,jdbcType=INTEGER} 
+   </if>
+   		and (select count(1) from  bus_appointment app left join pob_charging_pile pile on pile.ID = app.PILE_ID where pile.STATION_ID=station.ID) > 0
+
+   <if test="searchStationName != null">
+   		and station.STATION_NAME like concat('%',#{searchStationName},'%' ) 
+   </if>
+   		GROUP BY stationId
+<!--    SELECT 
+	station.ID as stationId,
+	station.SCORE as score,
+	station.STATION_NAME as stationName,
+	station.ADDRESS as address,
+	IFNULL(station.SLOW_NUM,0)+IFNULL(station.FAST_NUM,0) as pileNum,
+	count(app.ID) as appNum,
+	sum(app.APP_FEE) as appFee
+	FROM pob_charging_station station LEFT JOIN pob_charging_pile pile 
+	ON station.ID = pile.STATION_ID
+	LEFT JOIN bus_appointment app
+	ON pile.ID = app.PILE_ID
+	<if test="stationName != null">
+   		and station.STATION_NAME like concat('%',#{stationName},'%' ) 
+   </if>
+   GROUP BY station.ID -->
+  </select>
+     <!-- 导出充点电预约统计Excel -->
+  <select id="exportStationApp" resultMap="StationAppointmentModelMap" parameterType="java.util.Map" >
+   select 
+   station.ID as stationId,
+   station.SCORE as score,
+   station.STATION_NAME as stationName,
+   station.ADDRESS as address,
+   (station.SLOW_NUM+station.FAST_NUM) as pileNum,
+   (select count(1) from  bus_appointment app left join pob_charging_pile pile on pile.ID = app.PILE_ID where pile.STATION_ID=station.ID) as appNum,
+   ifnull((select sum(truncate(APP_FEE*#{rate},2)) from  pob_charging_pile pile left join bus_appointment app on pile.ID = app.PILE_ID where pile.STATION_ID=station.ID),0) as appFee
+   from pob_charging_station station
+   where 1=1
+   <if test="busType != null" >
+   		and station.BUS_TYPE=#{busType,jdbcType=SMALLINT} 
+   </if>
+   <if test="busMec != null" >
+     	and station.BUS_MEC=#{busMec,jdbcType=INTEGER} 
+   </if>
+   		and (select count(1) from  bus_appointment app left join pob_charging_pile pile on pile.ID = app.PILE_ID where pile.STATION_ID=station.ID) > 0
+
+   <if test="searchStationName != null">
+   		and station.STATION_NAME like concat('%',#{searchStationName},'%' ) 
+   </if>
+   GROUP BY stationId
+  </select>
+    <!-- 分页查询具体某个充电点预约记录 -->
+   <select id="selectAppByPage" resultMap="AppointmentModelMap" parameterType="java.util.Map" >
+    select p.PILE_NAME as pileName,
+    p.PILE_TYPE as pileType,
+    u.USERNAME as username,
+    u.PHONE as phone,
+    a.* 
+    from
+    <choose>
+    <when test="stationId!=null">
+    (select * from bus_appointment where PILE_ID in(select id from pob_charging_pile where STATION_ID=#{stationId,jdbcType=INTEGER})) as a
+    </when>
+    <otherwise>
+    bus_appointment a
+    </otherwise>
+    </choose>
+    left join bus_user u on u.id=a.user_id
+    left join pob_charging_pile p on p.id=a.pile_id
+    <if test="stationId==null">
+     left join pob_charging_station station on station.id=p.station_id
+    </if>
+    where 1=1
+     <if test="stationId==null">
+     	and station.BUS_MEC=#{busMec,jdbcType=INTEGER}
+    	and station.BUS_TYPE=#{busType,jdbcType=SMALLINT} 
+     </if>
+   <if test="searchPileName != null">
+   	and p.PILE_NAME like concat('%',#{searchPileName},'%' ) 
+   </if>
+   <if test="year != null">
+   	and year(a.ADD_TIME) = #{year}
+   </if>
+   <if test="month != null">
+   	and month(a.ADD_TIME) = #{month}
+   </if>
+    order by a.ADD_TIME desc
+   <if test="maxLimit != null">
+    limit #{maxLimit}
+   </if>
+  </select>
+    <!-- 按年，月，季度统计预约费用 -->
+  <select id="createAppProfit" resultMap="ProfitModelMap" parameterType="java.util.Map">
+  	select sum(truncate(app.APP_FEE*#{rate},2)) as appMoney,
+ 	<if test="profitType == 1" >
+        year(app.ADD_TIME) as dateName 
+    </if>
+  	<if test="profitType == 2" >
+        month(app.ADD_TIME) as dateName 
+    </if>
+    <if test="profitType == 3" >
+        quarter(app.ADD_TIME) as dateName 
+    </if>
+	  from bus_appointment app 
+	  left join pob_charging_pile pile on app.PILE_ID = pile.ID 
+	  left join pob_charging_station station on station.ID=pile.STATION_ID
+	  where 1=1 
+   <if test="busType != null" >
+    	and station.BUS_TYPE=#{busType,jdbcType=SMALLINT} 
+   </if>
+   <if test="busMec != null" >
+    	and station.BUS_MEC=#{busMec,jdbcType=INTEGER} 
+   </if>
+   <if test="appPayStatus != null">
+   		and app.PAY_STATUS=#{appPayStatus,jdbcType=SMALLINT} 
+  </if>
+  <if test="profitType == 2 or profitType == 3">
+    and year(app.ADD_TIME)=#{year}
+  </if>
+  group by dateName 
+  order by dateName asc
+  </select>
+  <select id="selectAppointmentByExampleByPage" resultMap="BaseResultMap" parameterType="com.holley.charging.model.bus.BusAppointmentExample" >
+    select
+    <include refid="Base_Column_List" />
+    from bus_appointment
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null" >
+      order by ${orderByClause}
+    </if>
+  </select>
+  <select id="selectAppointmentByMap" resultMap="BaseResultMap" parameterType="java.util.Map">
+  	select app.* from bus_appointment app
+  	left join pob_charging_pile pile on app.PILE_ID = pile.ID
+	left join pob_charging_station station on station.ID = pile.STATION_ID
+	where 1=1
+	<if test="busMec != null">
+		and station.BUS_MEC = #{busMec,jdbcType=INTEGER}
+	</if>
+	<if test="busType != null">
+		and station.BUS_TYPE = #{busType,jdbcType=INTEGER}
+	</if>
+	<if test="payStatus != null">
+		and app.PAY_STATUS = #{payStatus,jdbcType=SMALLINT}
+	</if>
+	<if test="isBill != null">
+		and app.IS_BILL = #{isBill,jdbcType=SMALLINT}
+	</if>
+	<if test="year != null">
+		and year(app.ADD_TIME) = #{year}
+	</if>
+	<if test="month != null">
+		and month(app.ADD_TIME) = #{month}
+	</if>
+		order by app.ADD_TIME ASC
+  </select>
+  <!-- 根据条件计算预约总费用 -->
+  <select id="getTotalAppFeeByMap" parameterType="java.util.Map" resultType="java.math.BigDecimal">
+  	select sum(APP_FEE) from 
+  	bus_appointment 
+  	where 1=1
+    <if test="isGroup == null">
+  		and USER_ID = #{userId,jdbcType=INTEGER}
+  	</if>
+  	<if test="isGroup != null">
+  		and USER_ID in
+  	 <foreach item="item" index="index" collection="list" open="(" separator="," close=")">  
+  		#{item}  
+ 	 </foreach>
+  	</if>
+  	and PAY_STATUS=#{payStatus,jdbcType=SMALLINT}
+  	<if test="year != null">
+  		and year(ADD_TIME) = #{year}
+  	</if>
+  	<if test="month != null">
+  		and month(ADD_TIME) = #{month}
+  	</if>
+  </select>
+  <update id="updateAppointmentBatch" parameterType="java.util.List">
+	 <foreach collection="list" item="item" separator=";">  
+       update bus_appointment
+       <set>  
+       IS_BILL = #{item.isBill}
+       </set> 
+       <where>
+       ID = #{item.id}
+       </where> 
+     </foreach>  
+  </update>
+  
+      <!-- 导出单一充电点预约记录Excel -->
+   <select id="exportAppointment" resultMap="AppointmentModelMap" parameterType="java.util.Map" >
+    select p.PILE_NAME as pileName,
+    p.PILE_TYPE as pileType,
+    u.USERNAME as username,
+    u.PHONE as phone,
+    a.* 
+    from
+    <choose>
+    <when test="stationId!=null">
+    (select * from bus_appointment where PILE_ID in(select id from pob_charging_pile where STATION_ID=#{stationId,jdbcType=INTEGER})) as a
+    </when>
+    <otherwise>
+    bus_appointment a
+    </otherwise>
+    </choose>
+    left join bus_user u on u.id=a.user_id
+    left join pob_charging_pile p on p.id=a.pile_id
+    <if test="stationId==null">
+     left join pob_charging_station station on station.id=p.station_id
+    </if>
+    where 1=1
+     <if test="stationId==null">
+     	and station.BUS_MEC=#{busMec,jdbcType=INTEGER}
+    	and station.BUS_TYPE=#{busType,jdbcType=SMALLINT} 
+     </if>
+   <if test="searchPileName != null">
+   	and p.PILE_NAME like concat('%',#{searchPileName},'%' ) 
+   </if>
+   <if test="year != null">
+   	and year(a.ADD_TIME) = #{year}
+   </if>
+   <if test="month != null">
+   	and month(a.ADD_TIME) = #{month}
+   </if>
+   <if test="startTime != null">
+    and a.ADD_TIME &gt;= #{startTime}
+   </if>
+   <if test="endTime != null">
+   	and a.ADD_TIME &lt;= #{endTime}
+   </if>
+   order by a.ADD_TIME desc
+  </select>
+  <select id="selectUserAppByPage" resultType="com.holley.charging.model.bus.BusAppointment" parameterType="java.util.Map">
+  	select user.USERNAME userName,app.ID id,app.USER_ID userId,app.APP_NO appNo,app.START_TIME startTime,app.END_TIME endTime,app.APP_LEN appLen,
+  	app.APP_FEE appFee,app.APP_STATUS appStatus,app.PAY_WAY payWay,app.ACCOUNT_INFO accountInfo,app.PAY_STATUS payStatus,
+  	app.IS_BILL isBill,app.ADD_TIME addTime
+  	from bus_appointment app left join bus_user user
+  	on app.USER_ID = user.ID
+    where 1=1
+    <if test="isGroup == null">
+    and  app.USER_ID = #{userId,jdbcType=INTEGER}
+    </if>
+   	<if test="isGroup != null">
+     	and app.USER_ID in
+  	 <foreach item="item" index="index" collection="list" open="(" separator="," close=")">  
+  		#{item}  
+ 	 </foreach>
+   	</if>
+   	<if test="userName != null">
+   	 	and user.USERNAME like CONCAT('%',#{userName},'%')  
+   	</if>
+    <if test="notAppStatus != null">
+    	and app.APP_STATUS != #{notAppStatus}
+    </if>
+    <if test="startTime != null">
+    	and app.ADD_TIME &gt;= #{startTime,jdbcType=TIMESTAMP}
+    </if>
+   	<if test="endTime != null">
+   	 	and app.ADD_TIME &lt;= #{endTime,jdbcType=TIMESTAMP}
+    </if>
+    	order by app.ADD_TIME desc
+    <if test="maxLimit != null">
+    	limit #{maxLimit}
+    </if>
+  </select>
+  <select id="selectAppointmentByPage" parameterType="java.util.Map" resultMap="AppointmentModelMap">
+  	SELECT a.ID,a.USER_ID,a.PILE_ID,a.APP_FEE,a.APP_LEN,a.APP_NO,a.APP_STATUS,a.END_TIME,
+			 a.IS_BILL,a.PAY_STATUS,a.PAY_WAY,a.START_TIME,a.ACCOUNT_INFO,a.ADD_TIME,
+			 u.USERNAME,u.PHONE,p.PILE_NAME as pileName,s.STATION_NAME as stationName,s.ADDRESS 
+	FROM bus_appointment a,bus_user u,pob_charging_pile p,pob_charging_station s
+	WHERE a.USER_ID = u.ID
+	AND a.PILE_ID = p.ID
+	AND p.STATION_ID = s.ID
+	AND u.USER_TYPE = 3
+	<if test="searchuser != null">
+		AND (u.USERNAME LIKE concat('%',#{searchuser},'%' )  OR u.PHONE LIKE concat('%',#{searchuser},'%' ))
+	</if>
+	<if test="searchstation != null">
+		AND (s.STATION_NAME LIKE concat('%',#{searchstation},'%' )  OR s.ADDRESS LIKE concat('%',#{searchstation},'%' ))
+	</if>
+	<if test="searchappno != null">
+		AND a.APP_NO LIKE concat('%',#{searchappno},'%') 
+	</if>
+	<if test="appstatus != null">
+		AND a.APP_STATUS = #{appstatus}
+	</if>
+	<if test="paystatus != null">
+		AND a.PAY_STATUS = #{paystatus}
+	</if>
+	<if test="isbill != null">
+		AND a.IS_BILL = #{isbill}
+	</if>
+	<if test="startdate != null">
+    	and a.ADD_TIME &gt;= #{startdate}
+    </if>
+   	<if test="enddate != null">
+   	 	and a.ADD_TIME &lt;= #{enddate}
+    </if>
+    ORDER BY a.ADD_TIME DESC
+  </select>
+  <select id="selectAppointmentDetail" parameterType="java.lang.Integer" resultMap="AppointmentModelMap">
+  	SELECT a.ID,a.USER_ID,a.PILE_ID,a.APP_FEE,a.APP_LEN,a.APP_NO,a.APP_STATUS,a.END_TIME,
+			 a.IS_BILL,a.PAY_STATUS,a.PAY_WAY,a.START_TIME,a.ACCOUNT_INFO,a.ADD_TIME,
+			 u.USERNAME,u.PHONE,p.PILE_NAME as pileName,s.STATION_NAME as stationName,s.ADDRESS 
+	FROM bus_appointment a,bus_user u,pob_charging_pile p,pob_charging_station s
+	WHERE a.USER_ID = u.ID
+	AND a.PILE_ID = p.ID
+	AND p.STATION_ID = s.ID
+	AND u.USER_TYPE = 3
+	AND a.ID = #{id}
+  </select>
+</mapper>
